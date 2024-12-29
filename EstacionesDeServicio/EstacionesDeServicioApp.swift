@@ -11,7 +11,7 @@ import SwiftUI
 struct EstacionesDeServicioApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            GasolinerasView()
         }
     }
 }
