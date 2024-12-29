@@ -1,3 +1,4 @@
+// FuelSelectionGrid.swift
 import SwiftUI
 
 struct FuelSelectionGrid: View {
@@ -23,7 +24,7 @@ struct FuelSelectionGrid: View {
                     }
                 }) {
                     VStack {
-                        // Puedes reemplazar el siguiente Image con íconos representativos de cada combustible
+                        // Reemplaza con íconos representativos de cada combustible
                         Image(systemName: iconName(for: fuel))
                             .resizable()
                             .scaledToFit()
@@ -60,5 +61,13 @@ struct FuelSelectionGrid: View {
         case .glp:
             return "flame.fill" // Ejemplo de ícono diferente
         }
+    }
+}
+
+struct FuelSelectionGrid_Previews: PreviewProvider {
+    @State static var selectedFuelType: FuelType? = nil
+    
+    static var previews: some View {
+        FuelSelectionGrid(selectedFuelType: $selectedFuelType)
     }
 }

@@ -20,3 +20,11 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.5), value: onboardingCompleted)
     }
 }
+
+
+//preview
+#Preview {
+    
+    RootView()
+        .environmentObject(GasolinerasViewModel())
+}
