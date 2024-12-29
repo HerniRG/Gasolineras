@@ -2,7 +2,7 @@ import SwiftUI
 import MapKit
 
 struct GasolinerasView: View {
-    @StateObject private var viewModel = GasolinerasViewModel()
+    @EnvironmentObject var viewModel: GasolinerasViewModel // Usar el ViewModel desde el entorno
     @State private var selectedTab: Tab = .list
     
     enum Tab { case list, map }
@@ -56,16 +56,17 @@ struct GasolinerasView: View {
                 Spacer() // Empuja hacia abajo
                 HStack {
                     Spacer() // Empuja hacia la derecha
-                    FloatingButton(icon: "location.fill", action: centerOnUserLocation)
-                        .padding(16) // Ajusta la posición
+                    FloatingButton(icon: "location.fill", action: {
+                        viewModel.requestLocationUpdate()
+                        centerOnUserLocation()
+                    })
+                    .padding(16) // Ajusta la posición
                 }
             }
         }
     }
-
+    
     private func centerOnUserLocation() {
-        viewModel.requestLocationUpdate() // Solicita actualizar la ubicación del usuario
-
         guard let currentLocation = viewModel.userLocation else {
             print("Error: No se pudo obtener la ubicación actual del usuario.")
             return
