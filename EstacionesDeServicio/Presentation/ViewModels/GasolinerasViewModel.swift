@@ -1,4 +1,6 @@
+import Foundation
 import SwiftUI
+import Combine
 import MapKit
 
 @MainActor
@@ -18,11 +20,24 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     @Published var isLoading: Bool = true
     @Published var errorMessage: String? = nil
     @Published var searchText: String = ""
-
+    
+    // MARK: - Filtros y Ordenación
+    @Published var sortOption: SortOption = .distance {
+        didSet {
+            updateFilteredGasolineras()
+        }
+    }
+    
+    @Published var radius: Double = 5.0 { // Radio en kilómetros
+        didSet {
+            updateFilteredGasolineras()
+        }
+    }
+    
     // MARK: - Ubicación
     @Published var region: MKCoordinateRegion
     @Published var userLocation: CLLocationCoordinate2D?
-
+    
     // MARK: - Permisos de localización
     @Published var locationAuthorized: Bool = false
     @Published var locationDenied: Bool = false
@@ -94,18 +109,17 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
         
-        // Si es la primera vez que tenemos la ubicación, actualizamos el mapa y cargamos datos
         if userLocation == nil {
             self.userLocation = loc.coordinate
             self.region = MKCoordinateRegion(
                 center: loc.coordinate,
                 span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
             )
-            loadGasolineras()
+            self.loadGasolineras()
         } else {
-            // Actualizamos la ubicación y los filtros
             self.userLocation = loc.coordinate
-            updateFilteredGasolineras()
+            self.updateDistances() // Recalcular distancias para todas las gasolineras
+            self.updateFilteredGasolineras() // Actualizar el filtrado basado en la nueva ubicación
         }
     }
     
@@ -126,11 +140,12 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
                 // Aquí llamas a tu servicio/API real:
                 let result = try await APIService.shared.fetchGasolineras()
                 self.gasolineras = result
-                updateFilteredGasolineras()
-                isLoading = false
+                self.updateDistances() // Calcular distancias para todas las gasolineras
+                self.updateFilteredGasolineras() // Filtrar según criterios
+                self.isLoading = false
             } catch {
-                errorMessage = error.localizedDescription
-                isLoading = false
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
             }
         }
     }
@@ -141,7 +156,7 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         loadGasolineras()
     }
     
-    // MARK: - Filtros y ordenación
+    // MARK: - Filtros y Ordenación
     func updateFilteredGasolineras() {
         var filtered = gasolineras
         
@@ -161,29 +176,80 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
             filtered = filtered.filter { $0.precioGasolina98 != nil }
         case .gasoleoA:
             filtered = filtered.filter { $0.precioGasoleoA != nil }
+        case .gasoleoPremium:
+            filtered = filtered.filter { $0.precioGasoleoPremium != nil }
         case .glp:
             filtered = filtered.filter { $0.precioGLP != nil }
-        default:
-            break
         }
-        
-        // Calculamos distancia si hay userLocation
-        if let userLocation = userLocation {
-            let userCL = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
-            filtered = filtered.map { gasolinera in
-                var updated = gasolinera
-                if let lat = gasolinera.latitud, let lon = gasolinera.longitud {
-                    let stationLocation = CLLocation(latitude: lat, longitude: lon)
-                    updated.distancia = userCL.distance(from: stationLocation)
-                } else {
-                    updated.distancia = nil
+
+        // Filtro por radio
+        if let _ = userLocation {
+            let radiusInMeters = radius * 1000
+            filtered = filtered.filter { gasolinera in
+                if let distancia = gasolinera.distancia {
+                    return distancia <= radiusInMeters
                 }
-                return updated
+                return false
             }
-            // Orden por distancia ascendente
-            filtered.sort { ($0.distancia ?? .infinity) < ($1.distancia ?? .infinity) }
         }
-        
+
+        // Ordenación
+        switch sortOption {
+        case .distance:
+            filtered.sort {
+                ($0.distancia ?? .infinity) < ($1.distancia ?? .infinity)
+            }
+        case .price:
+            filtered.sort { (a, b) -> Bool in
+                let priceA: Double
+                let priceB: Double
+                
+                switch selectedFuelType {
+                case .gasolina95:
+                    priceA = a.precioGasolina95 ?? Double.infinity
+                    priceB = b.precioGasolina95 ?? Double.infinity
+                case .gasolina98:
+                    priceA = a.precioGasolina98 ?? Double.infinity
+                    priceB = b.precioGasolina98 ?? Double.infinity
+                case .gasoleoA:
+                    priceA = a.precioGasoleoA ?? Double.infinity
+                    priceB = b.precioGasoleoA ?? Double.infinity
+                case .gasoleoPremium:
+                    priceA = a.precioGasoleoPremium ?? Double.infinity
+                    priceB = b.precioGasoleoPremium ?? Double.infinity
+                case .glp:
+                    priceA = a.precioGLP ?? Double.infinity
+                    priceB = b.precioGLP ?? Double.infinity
+                }
+                
+                if priceA != priceB {
+                    return priceA < priceB
+                } else {
+                    // Si los precios son iguales, ordenar por distancia
+                    let distanceA = a.distancia ?? Double.infinity
+                    let distanceB = b.distancia ?? Double.infinity
+                    return distanceA < distanceB
+                }
+            }
+        }
+
         self.filteredGasolineras = filtered
+    }
+    
+    /// Método para actualizar las distancias de todas las gasolineras
+    func updateDistances() {
+        guard let userLocation = userLocation else { return }
+        let userCL = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
+        
+        gasolineras = gasolineras.map { gasolinera in
+            var updated = gasolinera
+            if let lat = gasolinera.latitud, let lon = gasolinera.longitud {
+                let stationCL = CLLocation(latitude: lat, longitude: lon)
+                updated.distancia = userCL.distance(from: stationCL)
+            } else {
+                updated.distancia = nil
+            }
+            return updated
+        }
     }
 }

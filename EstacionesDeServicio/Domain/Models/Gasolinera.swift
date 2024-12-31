@@ -11,6 +11,7 @@ struct Gasolinera: Identifiable, Codable {
     let precioGasolina95: Double?
     let precioGasolina98: Double?
     let precioGasoleoA: Double?
+    let precioGasoleoPremium: Double?
     let precioGLP: Double?
     let longitud: Double?
     let latitud: Double?
@@ -26,6 +27,7 @@ struct Gasolinera: Identifiable, Codable {
         case precioGasolina95 = "Precio Gasolina 95 E5"
         case precioGasolina98 = "Precio Gasolina 98 E5"
         case precioGasoleoA = "Precio Gasoleo A"
+        case precioGasoleoPremium = "Precio Gasoleo Premium"
         case precioGLP = "Precio GLP"
         case longitud = "Longitud (WGS84)"
         case latitud = "Latitud"
@@ -35,6 +37,40 @@ struct Gasolinera: Identifiable, Codable {
         CLLocationCoordinate2D(latitude: latitud ?? 0.0, longitude: longitud ?? 0.0)
     }
 
+    // Inicializador manual
+    init(
+        id: String = UUID().uuidString,
+        rotulo: String,
+        direccion: String,
+        localidad: String,
+        provincia: String,
+        horario: String,
+        precioGasolina95: Double?,
+        precioGasolina98: Double?,
+        precioGasoleoA: Double?,
+        precioGasoleoPremium: Double?,
+        precioGLP: Double?,
+        longitud: Double?,
+        latitud: Double?,
+        distancia: Double? = nil
+    ) {
+        self.id = id
+        self.rotulo = rotulo
+        self.direccion = direccion
+        self.localidad = localidad
+        self.provincia = provincia
+        self.horario = horario
+        self.precioGasolina95 = precioGasolina95
+        self.precioGasolina98 = precioGasolina98
+        self.precioGasoleoA = precioGasoleoA
+        self.precioGasoleoPremium = precioGasoleoPremium
+        self.precioGLP = precioGLP
+        self.longitud = longitud
+        self.latitud = latitud
+        self.distancia = distancia
+    }
+
+    // Sobrescribe el inicializador de Codable
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
@@ -48,6 +84,7 @@ struct Gasolinera: Identifiable, Codable {
         precioGasolina95 = Gasolinera.decodePrice(for: .precioGasolina95, from: container)
         precioGasolina98 = Gasolinera.decodePrice(for: .precioGasolina98, from: container)
         precioGasoleoA = Gasolinera.decodePrice(for: .precioGasoleoA, from: container)
+        precioGasoleoPremium = Gasolinera.decodePrice(for: .precioGasoleoPremium, from: container)
         precioGLP = Gasolinera.decodePrice(for: .precioGLP, from: container)
 
         // Parse coordinates

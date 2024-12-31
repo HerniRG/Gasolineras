@@ -1,4 +1,3 @@
-// FuelSelectionGrid.swift
 import SwiftUI
 
 struct FuelSelectionGrid: View {
@@ -58,8 +57,10 @@ struct FuelSelectionGrid: View {
             return "fuelpump.fill"
         case .gasoleoA:
             return "fuelpump.fill"
+        case .gasoleoPremium:
+            return "fuelpump.fill"
         case .glp:
-            return "flame.fill" // Ejemplo de ícono diferente
+            return "flame.fill"
         }
     }
 }

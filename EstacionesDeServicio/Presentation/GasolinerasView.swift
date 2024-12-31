@@ -16,7 +16,7 @@ struct GasolinerasView: View {
                 )
                 .navigationTitle("Gasolineras")
         }
-        .navigationViewStyle(.columns)
+        .navigationViewStyle(.stack) // Usar .stack para mejor compatibilidad en iPhone
     }
     
     @ViewBuilder
@@ -30,12 +30,22 @@ struct GasolinerasView: View {
                     .transition(.move(edge: .bottom))
             } else {
                 VStack(spacing: 0) {
+                    // Controles de Filtrado solo en la pestaña de lista
+                    if selectedTab == .list {
+                        FilterControlsView()
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                    }
+                    
+                    // Contenido de la pestaña seleccionada
                     if selectedTab == .list {
                         ListView(gasolineras: viewModel.filteredGasolineras)
                             .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .leading)))
                     } else {
                         mapView
                     }
+                    
+                    // Barra de pestañas personalizada
                     CustomTabBar(selectedTab: $selectedTab, tabs: [.list, .map])
                 }
             }
@@ -46,7 +56,7 @@ struct GasolinerasView: View {
     private var mapView: some View {
         ZStack {
             MapaGasolinerasView(
-                gasolineras: viewModel.filteredGasolineras,
+                gasolineras: viewModel.gasolineras,
                 region: $viewModel.region
             )
             .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))

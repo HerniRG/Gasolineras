@@ -1,5 +1,63 @@
 import SwiftUI
 
+import SwiftUI
+
+struct SkeletonLoadingView: View {
+    var body: some View {
+        VStack {
+            // Skeleton para FilterControlsView
+            SkeletonFilterControlsView()
+                .padding(.horizontal)
+                .padding(.top, 8)
+            
+            // Skeleton para el contenido principal (lista de gasolineras)
+            List {
+                ForEach(0..<10, id: \.self) { _ in
+                    SkeletonRow()
+                        .listRowSeparator(.visible)
+                        .listRowSeparatorTint(Color.gray.opacity(0.5))
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                }
+            }
+            .listStyle(.plain)
+            
+            // Skeleton para la TabBar
+            SkeletonTabBar()
+        }
+        .edgesIgnoringSafeArea(.bottom) // Evita que la TabBar quede fuera de la pantalla
+    }
+}
+
+struct SkeletonFilterControlsView: View {
+    var body: some View {
+        VStack(spacing: 10) {
+            // Placeholder para el Picker
+            RoundedRectangle(cornerRadius: 5)
+                .fill(Color.gray.opacity(0.3))
+                .frame(height: 30)
+                .shimmerEffect()
+            
+            // Placeholder para el Slider y su etiqueta
+            VStack(alignment: .leading, spacing: 8) {
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 100, height: 15)
+                    .shimmerEffect()
+                
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 20)
+                    .shimmerEffect()
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(UIColor.secondarySystemBackground))
+        )
+    }
+}
+
 struct SkeletonRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -33,27 +91,6 @@ struct SkeletonRow: View {
         }
         .padding(.vertical, 8)
         .shimmerEffect()
-    }
-}
-
-struct SkeletonLoadingView: View {
-    var body: some View {
-        VStack {
-            // Skeleton para el contenido principal
-            List {
-                ForEach(0..<10, id: \.self) { _ in
-                    SkeletonRow()
-                        .listRowSeparator(.visible)
-                        .listRowSeparatorTint(Color.gray.opacity(0.5))
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                }
-            }
-            .listStyle(.plain)
-
-            // Skeleton para la TabBar
-            SkeletonTabBar()
-        }
-        .edgesIgnoringSafeArea(.bottom) // Evita que la TabBar quede fuera de la pantalla
     }
 }
 

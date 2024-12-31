@@ -5,6 +5,8 @@ struct MapaGasolinerasView: View {
     let gasolineras: [Gasolinera]
     @Binding var region: MKCoordinateRegion
 
+    @EnvironmentObject var viewModel: GasolinerasViewModel // Añadido
+
     @State private var isUpdatingRegion = false // Controla llamadas repetitivas
 
     private let zoomThreshold: Double = 0.05
@@ -18,24 +20,7 @@ struct MapaGasolinerasView: View {
             Map(coordinateRegion: $region, showsUserLocation: true, annotationItems: gasolinerasVisibles) { gasolinera in
                 MapAnnotation(coordinate: gasolinera.coordinate) {
                     NavigationLink(destination: GasolineraDetailView(gasolinera: gasolinera)) {
-                        VStack(spacing: 4) {
-                            Image(systemName: "fuelpump.fill")
-                                .foregroundColor(.red)
-                                .padding(6)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(radius: 4)
-
-                            if let distancia = gasolinera.distancia {
-                                Text("\(distancia / 1000, specifier: "%.2f") km") // Distancia en kilómetros
-                                    .font(.caption)
-                                    .foregroundColor(.primary)
-                                    .padding(4)
-                                    .background(Color(UIColor.systemBackground))
-                                    .cornerRadius(5)
-                                    .shadow(radius: 2)
-                            }
-                        }
+                        GasolineraAnnotationView(gasolinera: gasolinera, selectedFuelType: viewModel.selectedFuelType.rawValue)
                     }
                 }
             }
