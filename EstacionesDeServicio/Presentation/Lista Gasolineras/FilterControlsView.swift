@@ -29,7 +29,7 @@ struct FilterControlsView: View {
                         }
                     }
                 )
-                .accentColor(.green)
+                .accentColor(.blue)
             }
         }
         .padding()

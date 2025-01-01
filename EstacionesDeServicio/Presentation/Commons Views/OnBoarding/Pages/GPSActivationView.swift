@@ -59,9 +59,9 @@ struct GPSActivationView: View {
 
 struct GPSActivationView_Previews: PreviewProvider {
     static var previews: some View {
-        GPSActivationView(onNext: {
+        GPSActivationView {
             print("Avanzar a la siguiente página")
-        })
+        }
         .environmentObject(GasolinerasViewModel())
     }
 }

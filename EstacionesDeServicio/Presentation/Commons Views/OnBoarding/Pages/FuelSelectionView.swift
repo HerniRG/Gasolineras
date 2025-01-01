@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct FuelSelectionView: View {
-    @Binding var selectedFuelType: FuelType?
+    @Binding var selectedFuelType: FuelType
     var onFinish: () -> Void
     
     var body: some View {
@@ -21,30 +21,17 @@ struct FuelSelectionView: View {
             Spacer()
             
             Button(action: {
-                if selectedFuelType != nil {
-                    onFinish()
-                }
+                onFinish()
             }) {
                 Text("Finalizar")
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(selectedFuelType != nil ? Color.green : Color.gray)
+                    .background(Color.green)
                     .foregroundColor(.white)
                     .cornerRadius(8)
             }
             .padding(.horizontal)
-            .disabled(selectedFuelType == nil)
         }
         .padding()
-    }
-}
-
-struct FuelSelectionView_Previews: PreviewProvider {
-    @State static var selectedFuelType: FuelType? = nil
-    
-    static var previews: some View {
-        FuelSelectionView(selectedFuelType: $selectedFuelType) {
-            print("Finalizar presionado")
-        }
     }
 }

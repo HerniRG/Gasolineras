@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct FuelSelectionGrid: View {
-    @Binding var selectedFuelType: FuelType?
+    @Binding var selectedFuelType: FuelType
     
     // Definir una cuadrícula de 2 columnas
     let columns = [
@@ -10,16 +10,11 @@ struct FuelSelectionGrid: View {
     ]
     
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 20) {
+        LazyVGrid(columns: columns, spacing: 10) {
             ForEach(FuelType.allCases) { fuel in
                 Button(action: {
                     withAnimation {
-                        if selectedFuelType == fuel {
-                            // Si ya está seleccionado, deselecciona
-                            selectedFuelType = nil
-                        } else {
-                            selectedFuelType = fuel
-                        }
+                        selectedFuelType = fuel
                     }
                 }) {
                     VStack {
@@ -27,15 +22,17 @@ struct FuelSelectionGrid: View {
                         Image(systemName: iconName(for: fuel))
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 40, height: 40)
+                            .frame(width: 25, height: 25)
                             .foregroundColor(selectedFuelType == fuel ? .white : .blue)
                         
                         Text(fuel.rawValue)
                             .font(.headline)
                             .foregroundColor(selectedFuelType == fuel ? .white : .blue)
+                            .multilineTextAlignment(.center)
                     }
-                    .padding()
+                    
                     .frame(maxWidth: .infinity)
+                    .frame(height: 100)
                     .background(selectedFuelType == fuel ? Color.blue : Color.gray.opacity(0.2))
                     .cornerRadius(12)
                     .overlay(
@@ -44,6 +41,7 @@ struct FuelSelectionGrid: View {
                     )
                 }
                 .buttonStyle(PlainButtonStyle())
+                .accessibilityLabel(fuel.displayName)
             }
         }
     }
@@ -62,13 +60,5 @@ struct FuelSelectionGrid: View {
         case .glp:
             return "flame.fill"
         }
-    }
-}
-
-struct FuelSelectionGrid_Previews: PreviewProvider {
-    @State static var selectedFuelType: FuelType? = nil
-    
-    static var previews: some View {
-        FuelSelectionGrid(selectedFuelType: $selectedFuelType)
     }
 }

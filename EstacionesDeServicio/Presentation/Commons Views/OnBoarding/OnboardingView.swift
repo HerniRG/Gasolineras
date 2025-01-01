@@ -7,7 +7,7 @@ struct OnboardingView: View {
     @AppStorage("onboardingCompleted") private var onboardingCompleted = false
     
     @State private var selectedPage = 0
-    @State private var selectedFuelType: FuelType? = nil
+    @State private var selectedFuelType: FuelType = .gasolina95
     
     var body: some View {
         VStack {
@@ -31,10 +31,8 @@ struct OnboardingView: View {
                 
                 // 3) Pantalla de Selección de Combustible
                 FuelSelectionView(selectedFuelType: $selectedFuelType) {
-                    if let fuelType = selectedFuelType {
-                        viewModel.selectedFuelType = fuelType
-                        onboardingCompleted = true
-                    }
+                    viewModel.selectedFuelType = selectedFuelType
+                    onboardingCompleted = true
                 }
                 .tag(2)
             }

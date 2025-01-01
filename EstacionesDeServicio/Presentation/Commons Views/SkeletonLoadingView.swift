@@ -128,7 +128,7 @@ struct SkeletonTabBar: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .padding(EdgeInsets(top: 12, leading: 0, bottom: 32, trailing: 0))
+        .padding(EdgeInsets(top: 12, leading: 0, bottom: 28, trailing: 0))
         .background(Color(UIColor.systemGray6))
         .cornerRadius(10)
         .shadow(radius: 2)
