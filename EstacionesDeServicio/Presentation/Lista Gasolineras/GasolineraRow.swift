@@ -35,6 +35,17 @@ struct GasolineraRow: View {
                 }
                 .padding(EdgeInsets(top: 8, leading: 2, bottom: 2, trailing: 2))
             }
+            
+            // Información concisa sobre el costo de llenado
+            if let selectedFuelPrice = getSelectedFuelPrice() {
+                Text("\(costoLlenado(selectedFuelPrice), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l) con \(viewModel.selectedFuelType.rawValue)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("El tipo de combustible seleccionado no está disponible.")
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
         }
         .padding(.vertical, 8)
     }
@@ -69,5 +80,26 @@ struct GasolineraRow: View {
             }
             return lhs.fuelType.rawValue < rhs.fuelType.rawValue // Orden alfabético para los demás
         }
+    }
+    
+    // Obtener el precio del tipo de combustible seleccionado por el usuario
+    private func getSelectedFuelPrice() -> Double? {
+        switch viewModel.selectedFuelType {
+        case .gasolina95:
+            return gasolinera.precioGasolina95
+        case .gasolina98:
+            return gasolinera.precioGasolina98
+        case .gasoleoA:
+            return gasolinera.precioGasoleoA
+        case .gasoleoPremium:
+            return gasolinera.precioGasoleoPremium
+        case .glp:
+            return gasolinera.precioGLP
+        }
+    }
+    
+    // Calcular el costo de llenado basado en los litros seleccionados
+    private func costoLlenado(_ precioPorLitro: Double) -> Double {
+        return precioPorLitro * viewModel.fuelTankLiters
     }
 }

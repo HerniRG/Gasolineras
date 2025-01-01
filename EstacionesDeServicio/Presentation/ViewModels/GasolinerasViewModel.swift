@@ -15,6 +15,15 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         }
     }
     
+    // Nueva propiedad para los litros del depósito de combustible
+    @AppStorage("fuelTankLiters") private var fuelTankLitersRaw: Double = 50.0
+    @Published var fuelTankLiters: Double = 50.0 {
+        didSet {
+            fuelTankLitersRaw = fuelTankLiters
+            updateFilteredGasolineras() // Actualizar filtros si es necesario
+        }
+    }
+    
     @Published var gasolineras: [Gasolinera] = []
     @Published var filteredGasolineras: [Gasolinera] = []
     @Published var isLoading: Bool = true
@@ -53,6 +62,7 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         super.init()
         setupLocationManager()
         self.selectedFuelType = FuelType(rawValue: selectedFuelTypeRaw) ?? .gasolina95
+        self.fuelTankLiters = fuelTankLitersRaw
     }
     
     // MARK: - Configuración e inicialización del LocationManager
@@ -181,7 +191,7 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         case .glp:
             filtered = filtered.filter { $0.precioGLP != nil }
         }
-
+        
         // Filtro por radio
         if let _ = userLocation {
             let radiusInMeters = radius * 1000
@@ -192,7 +202,7 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
                 return false
             }
         }
-
+        
         // Ordenación
         switch sortOption {
         case .distance:
@@ -232,7 +242,7 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
                 }
             }
         }
-
+        
         self.filteredGasolineras = filtered
     }
     

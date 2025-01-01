@@ -4,6 +4,7 @@ import MapKit
 struct GasolinerasView: View {
     @EnvironmentObject var viewModel: GasolinerasViewModel
     @State private var selectedTab: Tab = .list
+    @State private var isShowingPreferences: Bool = false
     @StateObject private var keyboard = KeyboardObserver()
 
     enum Tab { case list, map }
@@ -13,6 +14,17 @@ struct GasolinerasView: View {
             content
                 .navigationTitle("Gasolineras")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    // Botón de preferencias en la esquina superior derecha
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            isShowingPreferences = true
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                        }
+                        .accessibilityLabel("Preferencias")
+                    }
+                }
         }
         .navigationViewStyle(.stack)
         .overlay(
@@ -25,6 +37,11 @@ struct GasolinerasView: View {
                 }
             }
         )
+        // Presentar PreferencesView como una hoja (sheet)
+        .sheet(isPresented: $isShowingPreferences) {
+            PreferencesView()
+                .environmentObject(viewModel)
+        }
     }
 
     @ViewBuilder

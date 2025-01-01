@@ -4,9 +4,8 @@ import MapKit
 struct GasolineraDetailView: View {
     let gasolinera: Gasolinera
     @State private var detailRegion = MKCoordinateRegion()
-    
-    private let depositoEstandar = 50.0 // Depósito estándar en litros
-    
+    @EnvironmentObject var viewModel: GasolinerasViewModel
+        
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 15) {
@@ -50,7 +49,7 @@ struct GasolineraDetailView: View {
                         if let precio95 = gasolinera.precioGasolina95 {
                             HStack {
                                 FuelPrice(fuelType: FuelType.gasolina95, price: precio95, isHorizontal: true)
-                                Text("\(costoLlenado(precio95), specifier: "%.2f") € / llenado (\(Int(depositoEstandar)) l)")
+                                Text("\(costoLlenado(precio95), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -58,7 +57,7 @@ struct GasolineraDetailView: View {
                         if let precio98 = gasolinera.precioGasolina98 {
                             HStack {
                                 FuelPrice(fuelType: FuelType.gasolina98, price: precio98, isHorizontal: true)
-                                Text("\(costoLlenado(precio98), specifier: "%.2f") € / llenado (\(Int(depositoEstandar)) l)")
+                                Text("\(costoLlenado(precio98), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -66,7 +65,7 @@ struct GasolineraDetailView: View {
                         if let precioGasoleoA = gasolinera.precioGasoleoA {
                             HStack {
                                 FuelPrice(fuelType: FuelType.gasoleoA, price: precioGasoleoA, isHorizontal: true)
-                                Text("\(costoLlenado(precioGasoleoA), specifier: "%.2f") € / llenado (\(Int(depositoEstandar)) l)")
+                                Text("\(costoLlenado(precioGasoleoA), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -74,7 +73,7 @@ struct GasolineraDetailView: View {
                         if let precioPremium = gasolinera.precioGasoleoPremium {
                             HStack {
                                 FuelPrice(fuelType: FuelType.gasoleoPremium, price: precioPremium, isHorizontal: true)
-                                Text("\(costoLlenado(precioPremium), specifier: "%.2f") € / llenado (\(Int(depositoEstandar)) l)")
+                                Text("\(costoLlenado(precioPremium), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -82,7 +81,7 @@ struct GasolineraDetailView: View {
                         if let precioGLP = gasolinera.precioGLP {
                             HStack {
                                 FuelPrice(fuelType: FuelType.glp, price: precioGLP, isHorizontal: true)
-                                Text("\(costoLlenado(precioGLP), specifier: "%.2f") € / llenado (\(Int(depositoEstandar)) l)")
+                                Text("\(costoLlenado(precioGLP), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -138,7 +137,7 @@ struct GasolineraDetailView: View {
     }
     
     private func costoLlenado(_ precioPorLitro: Double) -> Double {
-        return precioPorLitro * depositoEstandar
+        return precioPorLitro * viewModel.fuelTankLiters
     }
     
     private func isOpenNow(horario: String) -> Bool {
