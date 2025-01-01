@@ -1,15 +1,17 @@
 import SwiftUI
 
-import SwiftUI
-
 struct SkeletonLoadingView: View {
     var body: some View {
-        VStack {
+        VStack(spacing: 8) {
+            // Skeleton para el campo de búsqueda
+            SkeletonSearchBar()
+                .padding(.horizontal)
+                .padding(.top, 8)
+
             // Skeleton para FilterControlsView
             SkeletonFilterControlsView()
                 .padding(.horizontal)
-                .padding(.top, 8)
-            
+
             // Skeleton para el contenido principal (lista de gasolineras)
             List {
                 ForEach(0..<10, id: \.self) { _ in
@@ -20,11 +22,23 @@ struct SkeletonLoadingView: View {
                 }
             }
             .listStyle(.plain)
-            
+
             // Skeleton para la TabBar
             SkeletonTabBar()
         }
         .edgesIgnoringSafeArea(.bottom) // Evita que la TabBar quede fuera de la pantalla
+    }
+}
+
+struct SkeletonSearchBar: View {
+    var body: some View {
+        HStack {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.gray.opacity(0.3))
+                .frame(height: 36)
+                .shimmerEffect()
+        }
+        .padding(.horizontal, 16)
     }
 }
 
@@ -36,14 +50,14 @@ struct SkeletonFilterControlsView: View {
                 .fill(Color.gray.opacity(0.3))
                 .frame(height: 30)
                 .shimmerEffect()
-            
+
             // Placeholder para el Slider y su etiqueta
             VStack(alignment: .leading, spacing: 8) {
                 RoundedRectangle(cornerRadius: 5)
                     .fill(Color.gray.opacity(0.3))
                     .frame(width: 100, height: 15)
                     .shimmerEffect()
-                
+
                 RoundedRectangle(cornerRadius: 5)
                     .fill(Color.gray.opacity(0.3))
                     .frame(height: 20)
@@ -118,6 +132,5 @@ struct SkeletonTabBar: View {
         .background(Color(UIColor.systemGray6))
         .cornerRadius(10)
         .shadow(radius: 2)
-        
     }
 }

@@ -2,23 +2,31 @@ import SwiftUI
 import MapKit
 
 struct GasolinerasView: View {
-    @EnvironmentObject var viewModel: GasolinerasViewModel // Usar el ViewModel desde el entorno
+    @EnvironmentObject var viewModel: GasolinerasViewModel
     @State private var selectedTab: Tab = .list
-    
+    @StateObject private var keyboard = KeyboardObserver()
+
     enum Tab { case list, map }
-    
+
     var body: some View {
         NavigationView {
             content
-                .animation(
-                    .easeInOut(duration: 0.3),
-                    value: viewModel.isLoading || viewModel.errorMessage != nil || selectedTab == .list
-                )
                 .navigationTitle("Gasolineras")
+                .navigationBarTitleDisplayMode(.inline)
         }
-        .navigationViewStyle(.stack) // Usar .stack para mejor compatibilidad en iPhone
+        .navigationViewStyle(.stack)
+        .overlay(
+            VStack {
+                Spacer()
+                if !keyboard.isKeyboardVisible {
+                    CustomTabBar(selectedTab: $selectedTab, tabs: [.list, .map])
+                        .transition(.move(edge: .bottom))
+                        .animation(.easeInOut(duration: 0.3), value: keyboard.isKeyboardVisible)
+                }
+            }
+        )
     }
-    
+
     @ViewBuilder
     private var content: some View {
         ZStack {
@@ -30,28 +38,40 @@ struct GasolinerasView: View {
                     .transition(.move(edge: .bottom))
             } else {
                 VStack(spacing: 0) {
-                    // Controles de Filtrado solo en la pestaña de lista
                     if selectedTab == .list {
-                        FilterControlsView()
-                            .padding(.horizontal)
-                            .padding(.top, 8)
+                        VStack(spacing: 8) {
+                            searchBar
+                            FilterControlsView()
+                                .padding(.horizontal)
+                        }
+                        .padding(.top, 8)
                     }
-                    
-                    // Contenido de la pestaña seleccionada
+
                     if selectedTab == .list {
-                        ListView(gasolineras: viewModel.filteredGasolineras)
-                            .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .leading)))
+                        if viewModel.filteredGasolineras.isEmpty {
+                            // Mostrar mensaje si no hay resultados
+                            VStack {
+                                Spacer()
+                                Text("No se encontraron resultados.")
+                                    .font(.headline)
+                                    .foregroundColor(.gray)
+                                Spacer()
+                            }
+                            .transition(.opacity)
+                        } else {
+                            ListView(gasolineras: viewModel.filteredGasolineras)
+                                .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .leading)))
+                                .listStyle(PlainListStyle())
+                        }
                     } else {
                         mapView
                     }
-                    
-                    // Barra de pestañas personalizada
-                    CustomTabBar(selectedTab: $selectedTab, tabs: [.list, .map])
                 }
+                .frame(maxHeight: .infinity)
             }
         }
     }
-    
+
     @ViewBuilder
     private var mapView: some View {
         ZStack {
@@ -61,21 +81,20 @@ struct GasolinerasView: View {
             )
             .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
 
-            // Posicionamiento del FloatingButton
             VStack {
-                Spacer() // Empuja hacia abajo
+                Spacer()
                 HStack {
-                    Spacer() // Empuja hacia la derecha
+                    Spacer()
                     FloatingButton(icon: "location.fill", action: {
                         viewModel.requestLocationUpdate()
                         centerOnUserLocation()
                     })
-                    .padding(16) // Ajusta la posición
+                    .padding(16)
                 }
             }
         }
     }
-    
+
     private func centerOnUserLocation() {
         guard let currentLocation = viewModel.userLocation else {
             print("Error: No se pudo obtener la ubicación actual del usuario.")
@@ -88,5 +107,27 @@ struct GasolinerasView: View {
                 span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
             )
         }
+    }
+
+    private var searchBar: some View {
+        HStack {
+            TextField("Buscar por gasolinera o localidad...", text: $viewModel.searchText)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal, 8)
+                .onChange(of: viewModel.searchText) {
+                    viewModel.updateFilteredGasolineras()
+                }
+            if !viewModel.searchText.isEmpty {
+                Button(action: {
+                    viewModel.searchText = ""
+                    viewModel.updateFilteredGasolineras()
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.gray)
+                }
+                .padding(.trailing, 8)
+            }
+        }
+        .padding(.horizontal, 16)
     }
 }
