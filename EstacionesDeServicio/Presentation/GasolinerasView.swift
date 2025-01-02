@@ -5,7 +5,7 @@ struct GasolinerasView: View {
     @EnvironmentObject var viewModel: GasolinerasViewModel
     @State private var selectedTab: Tab = .list
     @State private var isShowingPreferences: Bool = false
-    @State private var isShowingGPSActivation: Bool = false // Nueva variable de estado
+    @State private var isShowingGPSActivation: Bool = false
     @StateObject private var keyboard = KeyboardObserver()
     
     enum Tab { case list, map }
@@ -13,10 +13,25 @@ struct GasolinerasView: View {
     var body: some View {
         NavigationView {
             content
-                .navigationTitle("Gasolineras")
+                // Quitamos el .navigationTitle("Gasolineras")
+                // para usar un título personalizado
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    // Botón de preferencias en la esquina superior derecha
+                    
+                    // 1) Título Personalizado en el Centro
+                    ToolbarItem(placement: .principal) {
+                        HStack(spacing: 8) {
+                            Image("gasolineraIcon")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 28, height: 28)
+                            
+                            Text("Tu Gasolinera")
+                                .font(.headline)
+                        }
+                    }
+                    
+                    // 2) Botón de Preferencias en la Esquina Derecha
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
                             isShowingPreferences = true
@@ -28,24 +43,20 @@ struct GasolinerasView: View {
                 }
         }
         .navigationViewStyle(.stack)
-        // Presentar PreferencesView como una hoja (sheet)
         .sheet(isPresented: $isShowingPreferences) {
             PreferencesView()
                 .environmentObject(viewModel)
         }
-        // Observador para detectar cambios en permisos de ubicación
         .onReceive(viewModel.$locationAuthorized.combineLatest(viewModel.$locationDenied)) { authorized, denied in
             if !authorized || denied {
                 isShowingGPSActivation = true
             }
         }
-        // Presentar GPSActivationView como una cubierta de pantalla completa
         .fullScreenCover(isPresented: $isShowingGPSActivation) {
             GPSActivationView {
-                // Acción a realizar después de que el usuario active el GPS
                 isShowingGPSActivation = false
             }
-            .environmentObject(viewModel) // Pasar el viewModel al entorno
+            .environmentObject(viewModel)
         }
     }
     
@@ -71,7 +82,6 @@ struct GasolinerasView: View {
                     
                     if selectedTab == .list {
                         if viewModel.filteredGasolineras.isEmpty {
-                            // Mostrar mensaje si no hay resultados
                             VStack {
                                 Text("No se encontraron resultados.")
                                     .font(.headline)
@@ -83,17 +93,16 @@ struct GasolinerasView: View {
                         } else {
                             ListView(gasolineras: viewModel.filteredGasolineras)
                                 .listStyle(PlainListStyle())
-                                .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .leading)))
+                                .transition(.asymmetric(insertion: .move(edge: .leading),
+                                                        removal: .move(edge: .leading)))
                         }
                     } else {
                         mapView
                     }
                     
-                    // Mostrar el CustomTabBar solo cuando los datos están cargados y no hay teclado visible
                     if !keyboard.isKeyboardVisible {
                         CustomTabBar(selectedTab: $selectedTab, tabs: [.list, .map])
-                            //.padding(.top, 10) // Removido para eliminar el hueco
-                            .padding(.bottom, 20) // Espacio adecuado para evitar superposición
+                            .padding(.bottom, 20)
                             .transition(.move(edge: .bottom))
                             .animation(.easeInOut(duration: 0.3), value: selectedTab)
                     }
@@ -111,7 +120,8 @@ struct GasolinerasView: View {
                 gasolineras: viewModel.gasolineras,
                 region: $viewModel.region
             )
-            .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
+            .transition(.asymmetric(insertion: .move(edge: .trailing),
+                                    removal: .move(edge: .trailing)))
             
             VStack {
                 Spacer()

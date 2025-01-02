@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct GasolineraRow: View {
-    @EnvironmentObject var viewModel: GasolinerasViewModel // Acceso al ViewModel
+    @EnvironmentObject var viewModel: GasolinerasViewModel
     let gasolinera: Gasolinera
     
     var body: some View {
@@ -24,23 +24,22 @@ struct GasolineraRow: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
-            // Combustibles
-            let fuelPrices = sortedFuelPrices()
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 15) {
-                    ForEach(fuelPrices, id: \.fuelType) { fuelPrice in
-                        FuelPrice(fuelType: fuelPrice.fuelType, price: fuelPrice.price)
-                    }
-                }
-                .padding(EdgeInsets(top: 8, leading: 2, bottom: 2, trailing: 2))
-            }
-            
-            // Información concisa sobre el costo de llenado
+            // Muestra solamente el tipo de combustible seleccionado
             if let selectedFuelPrice = getSelectedFuelPrice() {
-                Text("\(costoLlenado(selectedFuelPrice), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l) con \(viewModel.selectedFuelType.rawValue)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // Vista personalizada del precio, con layout horizontal
+                HStack {
+                    FuelPrice(
+                        fuelType: viewModel.selectedFuelType,
+                        price: selectedFuelPrice,
+                        isHorizontal: true
+                    )
+                    .padding(.vertical, 8)
+                    
+                    // Cálculo del costo de llenado
+                    Text("\(costoLlenado(selectedFuelPrice), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             } else {
                 Text("El tipo de combustible seleccionado no está disponible.")
                     .font(.caption)
@@ -50,39 +49,7 @@ struct GasolineraRow: View {
         .padding(.vertical, 8)
     }
     
-    // Organizar los combustibles, priorizando el seleccionado por el usuario
-    private func sortedFuelPrices() -> [(fuelType: FuelType, price: Double)] {
-        var fuelPrices: [(fuelType: FuelType, price: Double)] = []
-        
-        if let precio95 = gasolinera.precioGasolina95 {
-            fuelPrices.append((.gasolina95, precio95))
-        }
-        if let precio98 = gasolinera.precioGasolina98 {
-            fuelPrices.append((.gasolina98, precio98))
-        }
-        if let precioGasoleoA = gasolinera.precioGasoleoA {
-            fuelPrices.append((.gasoleoA, precioGasoleoA))
-        }
-        if let precioPremium = gasolinera.precioGasoleoPremium {
-            fuelPrices.append((.gasoleoPremium, precioPremium))
-        }
-        if let precioGLP = gasolinera.precioGLP {
-            fuelPrices.append((.glp, precioGLP))
-        }
-        
-        // Priorizar el combustible seleccionado
-        return fuelPrices.sorted { lhs, rhs in
-            if lhs.fuelType == viewModel.selectedFuelType {
-                return true
-            }
-            if rhs.fuelType == viewModel.selectedFuelType {
-                return false
-            }
-            return lhs.fuelType.rawValue < rhs.fuelType.rawValue // Orden alfabético para los demás
-        }
-    }
-    
-    // Obtener el precio del tipo de combustible seleccionado por el usuario
+    /// Devuelve el precio del combustible seleccionado por el usuario (si existe).
     private func getSelectedFuelPrice() -> Double? {
         switch viewModel.selectedFuelType {
         case .gasolina95:
@@ -98,7 +65,7 @@ struct GasolineraRow: View {
         }
     }
     
-    // Calcular el costo de llenado basado en los litros seleccionados
+    /// Calcula el costo de llenado basado en el tamaño del depósito y el precio por litro.
     private func costoLlenado(_ precioPorLitro: Double) -> Double {
         return precioPorLitro * viewModel.fuelTankLiters
     }

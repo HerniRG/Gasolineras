@@ -77,34 +77,40 @@ struct SkeletonRow: View {
         VStack(alignment: .leading, spacing: 8) {
             // Cabecera
             HStack {
+                // Simula el título (rotulo)
                 RoundedRectangle(cornerRadius: 5)
                     .fill(Color.gray.opacity(0.3))
-                    .frame(width: 150, height: 20) // Simula el título
+                    .frame(width: 150, height: 20)
+                
                 Spacer()
+                
+                // Simula la distancia
                 RoundedRectangle(cornerRadius: 5)
                     .fill(Color.gray.opacity(0.3))
-                    .frame(width: 80, height: 20) // Simula la distancia
+                    .frame(width: 80, height: 20)
             }
-
+            
             // Dirección
             RoundedRectangle(cornerRadius: 5)
                 .fill(Color.gray.opacity(0.3))
                 .frame(height: 16) // Simula la dirección
-
-            // Combustibles
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 15) {
-                    ForEach(0..<3, id: \.self) { _ in
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 80, height: 40) // Simula un bloque de precio
-                    }
-                }
-                .padding(.top, 8)
+            
+            // Combustible seleccionado + Costo de llenado
+            HStack(spacing: 8) {
+                // Simula el bloque de precio
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 140, height: 40)
+                
+                // Simula el texto de costo de llenado
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 120, height: 12)
             }
+            .padding(.top, 8)
         }
         .padding(.vertical, 8)
-        .shimmerEffect()
+        .shimmerEffect()  // Aplicar tu efecto shimmer si lo deseas
     }
 }
 
