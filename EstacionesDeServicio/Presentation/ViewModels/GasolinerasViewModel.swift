@@ -179,17 +179,8 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         }
         
         // Filtro por tipo de combustible
-        switch selectedFuelType {
-        case .gasolina95:
-            filtered = filtered.filter { $0.precioGasolina95 != nil }
-        case .gasolina98:
-            filtered = filtered.filter { $0.precioGasolina98 != nil }
-        case .gasoleoA:
-            filtered = filtered.filter { $0.precioGasoleoA != nil }
-        case .gasoleoPremium:
-            filtered = filtered.filter { $0.precioGasoleoPremium != nil }
-        case .glp:
-            filtered = filtered.filter { $0.precioGLP != nil }
+        filtered = filtered.filter { gasolinera in
+            gasolinera.price(for: selectedFuelType) != nil
         }
         
         // Filtro por radio
@@ -211,26 +202,8 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
             }
         case .price:
             filtered.sort { (a, b) -> Bool in
-                let priceA: Double
-                let priceB: Double
-                
-                switch selectedFuelType {
-                case .gasolina95:
-                    priceA = a.precioGasolina95 ?? Double.infinity
-                    priceB = b.precioGasolina95 ?? Double.infinity
-                case .gasolina98:
-                    priceA = a.precioGasolina98 ?? Double.infinity
-                    priceB = b.precioGasolina98 ?? Double.infinity
-                case .gasoleoA:
-                    priceA = a.precioGasoleoA ?? Double.infinity
-                    priceB = b.precioGasoleoA ?? Double.infinity
-                case .gasoleoPremium:
-                    priceA = a.precioGasoleoPremium ?? Double.infinity
-                    priceB = b.precioGasoleoPremium ?? Double.infinity
-                case .glp:
-                    priceA = a.precioGLP ?? Double.infinity
-                    priceB = b.precioGLP ?? Double.infinity
-                }
+                let priceA = a.price(for: selectedFuelType) ?? Double.infinity
+                let priceB = b.price(for: selectedFuelType) ?? Double.infinity
                 
                 if priceA != priceB {
                     return priceA < priceB

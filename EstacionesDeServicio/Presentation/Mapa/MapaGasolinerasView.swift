@@ -20,7 +20,7 @@ struct MapaGasolinerasView: View {
             Map(coordinateRegion: $region, showsUserLocation: true, annotationItems: gasolinerasVisibles) { gasolinera in
                 MapAnnotation(coordinate: gasolinera.coordinate) {
                     NavigationLink(destination: GasolineraDetailView(gasolinera: gasolinera)) {
-                        GasolineraAnnotationView(gasolinera: gasolinera, selectedFuelType: viewModel.selectedFuelType.rawValue)
+                        GasolineraAnnotationView(gasolinera: gasolinera, selectedFuelType: viewModel.selectedFuelType)
                     }
                 }
             }
@@ -47,3 +47,4 @@ struct MapaGasolinerasView: View {
         }
     }
 }
+

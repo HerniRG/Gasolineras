@@ -28,6 +28,11 @@ struct PreferencesView: View {
                     
                     // Sección de Tipo de Combustible
                     SectionView(header: "Tipo de Combustible") {
+                        Text("⚠️ **Nota:** Algunos combustibles pueden tener disponibilidad limitada en ciertas estaciones.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.leading)
+                            .padding(.horizontal)
                         FuelSelectionGrid(selectedFuelType: $viewModel.selectedFuelType)
                             .padding()
                             .background(Color.gray.opacity(0.1))

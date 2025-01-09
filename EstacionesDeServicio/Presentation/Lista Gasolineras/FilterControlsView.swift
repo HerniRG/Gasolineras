@@ -16,12 +16,12 @@ struct FilterControlsView: View {
             
             // Slider para el radio de búsqueda
             VStack(alignment: .leading) {
-                Text("Radio: \(Int(tempRadius)) km")
+                Text("Radio: \(tempRadius, specifier: "%.2f") km")
                     .font(.caption)
                 Slider(
                     value: $tempRadius,
-                    in: 1...20,
-                    step: 1,
+                    in: 0...100,
+                    step: 2.5,
                     onEditingChanged: { editing in
                         if !editing {
                             // Cuando el usuario suelta el slider, actualiza el radius en el ViewModel

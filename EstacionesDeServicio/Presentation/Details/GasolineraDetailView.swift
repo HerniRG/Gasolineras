@@ -34,61 +34,34 @@ struct GasolineraDetailView: View {
                         .foregroundColor(.blue)
                 }
                 
+                // Dirección
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Dirección")
                         .font(.headline)
                     Text("\(gasolinera.direccion), \(gasolinera.localidad), \(gasolinera.provincia)")
                 }
                 
+                // Precios
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Precios")
                         .font(.headline)
                     
                     // Lista de precios con FuelPrice y cálculo de llenado
                     VStack(spacing: 15) {
-                        if let precio95 = gasolinera.precioGasolina95 {
-                            HStack {
-                                FuelPrice(fuelType: FuelType.gasolina95, price: precio95, isHorizontal: true)
-                                Text("\(costoLlenado(precio95), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        if let precio98 = gasolinera.precioGasolina98 {
-                            HStack {
-                                FuelPrice(fuelType: FuelType.gasolina98, price: precio98, isHorizontal: true)
-                                Text("\(costoLlenado(precio98), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        if let precioGasoleoA = gasolinera.precioGasoleoA {
-                            HStack {
-                                FuelPrice(fuelType: FuelType.gasoleoA, price: precioGasoleoA, isHorizontal: true)
-                                Text("\(costoLlenado(precioGasoleoA), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        if let precioPremium = gasolinera.precioGasoleoPremium {
-                            HStack {
-                                FuelPrice(fuelType: FuelType.gasoleoPremium, price: precioPremium, isHorizontal: true)
-                                Text("\(costoLlenado(precioPremium), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        if let precioGLP = gasolinera.precioGLP {
-                            HStack {
-                                FuelPrice(fuelType: FuelType.glp, price: precioGLP, isHorizontal: true)
-                                Text("\(costoLlenado(precioGLP), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                        ForEach(FuelType.allCases) { fuel in
+                            if let precio = gasolinera.price(for: fuel) {
+                                HStack {
+                                    FuelPrice(fuelType: fuel, price: precio, isHorizontal: true)
+                                    Text("\(costoLlenado(precio), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                         }
                     }
                 }
                 
+                // Horario
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Horario")
                         .font(.headline)

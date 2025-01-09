@@ -62,6 +62,18 @@ struct GasolineraRow: View {
             return gasolinera.precioGasoleoPremium
         case .glp:
             return gasolinera.precioGLP
+        case .gnc:
+            return gasolinera.precioGNC
+        case .gnl:
+            return gasolinera.precioGNL
+        case .hidrogeno:
+            return gasolinera.precioHidrogeno
+        case .bioetanol:
+            return gasolinera.precioBioetanol
+        case .biodiesel:
+            return gasolinera.precioBiodiesel
+        case .esterMetilico:
+            return gasolinera.precioEsterMetilico
         }
     }
     

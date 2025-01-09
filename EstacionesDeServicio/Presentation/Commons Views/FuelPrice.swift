@@ -65,15 +65,27 @@ struct FuelPrice: View {
     private var backgroundColor: Color {
         switch fuelType {
         case .gasolina95:
-            return .green.opacity(0.2)
+            return Color.green.opacity(0.2) // Combustible fósil
         case .gasolina98:
-            return .blue.opacity(0.2)
+            return Color.blue.opacity(0.2) // Combustible fósil
         case .gasoleoA:
-            return .orange.opacity(0.2)
+            return Color.orange.opacity(0.2) // Combustible fósil
         case .gasoleoPremium:
-            return .yellow.opacity(0.2)
+            return Color.yellow.opacity(0.2) // Combustible fósil
         case .glp:
-            return .purple.opacity(0.2)
+            return Color.purple.opacity(0.2) // GLP
+        case .gnc:
+            return Color.teal.opacity(0.2) // Gas Natural Comprimido
+        case .gnl:
+            return Color.teal.opacity(0.2) // Gas Natural Licuado
+        case .hidrogeno:
+            return Color.blue.opacity(0.2) // Hidrógeno
+        case .bioetanol:
+            return Color.purple.opacity(0.2) // Bioetanol
+        case .biodiesel:
+            return Color.purple.opacity(0.2) // Biodiesel
+        case .esterMetilico:
+            return Color.teal.opacity(0.2) // Éster Metílico
         }
     }
 }
