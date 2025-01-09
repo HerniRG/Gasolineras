@@ -1,5 +1,5 @@
 import SwiftUI
-//import Lottie
+import Lottie
 
 struct GPSActivationView: View {
     @EnvironmentObject var viewModel: GasolinerasViewModel
@@ -15,17 +15,9 @@ struct GPSActivationView: View {
                 .multilineTextAlignment(.center)
                 .padding()
             
-//            LottieView(animation: .named("gps"))
-//                .looping()
-//                .frame(height: 300)
-            Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 300)
-                            .overlay(
-                                Text("Animación aquí")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            )
+            LottieView(animation: .named("gps"))
+                .looping()
+                .frame(height: 300)
             
             Spacer()
             

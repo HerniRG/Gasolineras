@@ -1,5 +1,5 @@
 import SwiftUI
-//import Lottie
+import Lottie
 
 struct IntroductionView: View {
     var onNext: () -> Void
@@ -15,18 +15,9 @@ struct IntroductionView: View {
                 .multilineTextAlignment(.center)
                 .padding()
             
-//            LottieView(animation: .named("welcome"))
-//                .looping()
-//                .frame(height: 300)
-            
-            Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 300)
-                            .overlay(
-                                Text("Animación aquí")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            )
+            LottieView(animation: .named("welcome"))
+                .looping()
+                .frame(height: 300)
             
             Spacer()
             
