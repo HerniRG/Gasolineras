@@ -140,22 +140,25 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     
     // MARK: - Carga de datos
     func loadGasolineras() {
-        isLoading = true
-        errorMessage = nil
-        gasolineras = []
-        filteredGasolineras = []
-        
         Task {
             do {
-                // Aquí llamas a tu servicio/API real:
-                let result = try await APIService.shared.fetchGasolineras()
-                self.gasolineras = result
-                self.updateDistances() // Calcular distancias para todas las gasolineras
-                self.updateFilteredGasolineras() // Filtrar según criterios
-                self.isLoading = false
+                // Verificar si hay datos almacenados y si son del mismo día
+                if let lastUpdated = try SwiftDataManager.shared.getLastUpdatedDate(),
+                   Calendar.current.isDateInToday(lastUpdated) {
+                    // Cargar desde la base de datos
+                    let cachedGasolineras = try SwiftDataManager.shared.fetchGasolineras()
+                    self.gasolineras = cachedGasolineras
+                    self.updateDistances()
+                    self.updateFilteredGasolineras()
+                    self.isLoading = false
+                } else {
+                    // Cargar desde la API
+                    try await fetchFromAPI()
+                }
             } catch {
-                self.errorMessage = error.localizedDescription
-                self.isLoading = false
+                // En caso de error al acceder a la base de datos, intentar cargar desde la API
+                print("Error al acceder a la base de datos: \(error.localizedDescription)")
+                try? await fetchFromAPI()
             }
         }
     }
@@ -164,6 +167,26 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         errorMessage = nil
         isLoading = true
         loadGasolineras()
+    }
+    
+    // MARK: - Fetch desde la API y Guardar en la Base de Datos
+    private func fetchFromAPI() async throws {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let result = try await APIService.shared.fetchGasolineras()
+            self.gasolineras = result
+            self.updateDistances()
+            self.updateFilteredGasolineras()
+            isLoading = false
+            
+            // Guardar en la base de datos
+            try await SwiftDataManager.shared.saveGasolineras(result)
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isLoading = false
+        }
     }
     
     // MARK: - Filtros y Ordenación

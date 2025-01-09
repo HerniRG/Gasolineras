@@ -169,3 +169,9 @@ extension Gasolinera {
         }
     }
 }
+
+extension Gasolinera {
+    func toEntity() -> GasolineraEntity {
+        return GasolineraEntity(from: self)
+    }
+}
