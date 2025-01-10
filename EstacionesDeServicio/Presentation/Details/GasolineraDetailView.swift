@@ -5,7 +5,7 @@ struct GasolineraDetailView: View {
     let gasolinera: Gasolinera
     @State private var detailRegion = MKCoordinateRegion()
     @EnvironmentObject var viewModel: GasolinerasViewModel
-        
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 15) {
@@ -42,7 +42,7 @@ struct GasolineraDetailView: View {
                 }
                 
                 // Precios
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 16) {
                     Text("Precios")
                         .font(.headline)
                     
@@ -52,9 +52,19 @@ struct GasolineraDetailView: View {
                             if let precio = gasolinera.price(for: fuel) {
                                 HStack {
                                     FuelPrice(fuelType: fuel, price: precio, isHorizontal: true)
-                                    Text("\(costoLlenado(precio), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        // Cálculo del costo de llenado
+                                        Text("\(costoLlenado(precio), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(nil)
+                                            
+                                        // Texto para el promedio del tipo de combustible actual
+                                        Text("\(viewModel.calcularPromedioEnRadio(fuelType: fuel), specifier: "%.2f") € / l promedio en \(Int(viewModel.radius)) km")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(nil)
+                                    }
                                 }
                             }
                         }

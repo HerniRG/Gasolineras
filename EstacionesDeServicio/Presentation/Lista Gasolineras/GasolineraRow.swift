@@ -36,9 +36,19 @@ struct GasolineraRow: View {
                     .padding(.vertical, 8)
                     
                     // Cálculo del costo de llenado
-                    Text("\(costoLlenado(selectedFuelPrice), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Cálculo del costo de llenado
+                        Text("\(costoLlenado(selectedFuelPrice), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
+                        
+                        // Nuevo texto para el promedio
+                        Text("\(viewModel.calcularPromedioEnRadio(), specifier: "%.2f") € / l promedio en \(Int(viewModel.radius)) km")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
+                    }
                 }
             } else {
                 Text("El tipo de combustible seleccionado no está disponible.")
@@ -82,3 +92,4 @@ struct GasolineraRow: View {
         return precioPorLitro * viewModel.fuelTankLiters
     }
 }
+

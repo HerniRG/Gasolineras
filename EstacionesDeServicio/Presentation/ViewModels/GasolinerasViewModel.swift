@@ -259,3 +259,19 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         }
     }
 }
+
+extension GasolinerasViewModel {
+
+    /// Calcula el promedio del precio de un tipo de combustible en las gasolineras filtradas.
+    /// - Parameter fuelType: Tipo de combustible. Si no se especifica, usa el combustible seleccionado.
+    /// - Returns: El promedio del precio del combustible en el radio filtrado.
+    func calcularPromedioEnRadio(fuelType: FuelType? = nil) -> Double {
+        let tipoCombustible = fuelType ?? selectedFuelType
+        // Filtra solo las gasolineras que tienen un precio válido para el tipo de combustible dado
+        let precios = filteredGasolineras.compactMap { $0.price(for: tipoCombustible) }
+
+        // Retorna el promedio si hay precios disponibles, de lo contrario retorna 0.0
+        guard !precios.isEmpty else { return 0.0 }
+        return precios.reduce(0.0, +) / Double(precios.count)
+    }
+}
