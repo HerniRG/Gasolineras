@@ -44,7 +44,7 @@ struct GasolineraRow: View {
                             .lineLimit(nil)
                         
                         // Nuevo texto para el promedio
-                        Text("\(viewModel.calcularPromedioEnRadio(), specifier: "%.2f") € / l promedio en \(Int(viewModel.radius)) km")
+                        Text("\(viewModel.calcularPromedioEnRadio(), specifier: "%.3f") € / l promedio en \(Int(viewModel.radius)) km")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .lineLimit(nil)
