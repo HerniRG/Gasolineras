@@ -101,11 +101,16 @@ struct SkeletonRow: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.gray.opacity(0.3))
                     .frame(width: 140, height: 40)
-                
-                // Simula el texto de costo de llenado
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 120, height: 12)
+                VStack(alignment: .leading, spacing: 8) {
+                    // Simula el texto de costo de llenado
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 120, height: 12)
+                    // Simula el texto de del promedio en el radio
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 140, height: 12)
+                }
             }
             .padding(.top, 8)
         }
