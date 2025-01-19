@@ -39,7 +39,7 @@ struct MapaGasolinerasView: View {
                 VStack {
                     HStack {
                         Image(systemName: "magnifyingglass")
-                            .foregroundColor(.gray)
+                            .foregroundColor(.blue)
                         Text("Haz zoom para ver las gasolineras")
                             .font(.subheadline)
                             .foregroundColor(.primary)
@@ -70,43 +70,44 @@ struct MapaGasolinerasView: View {
                 Spacer()
                 
                 // HStack con el PrecioResumenView y el botón flotante
-                if showPins {
+                
                     HStack {
-                        
-                        Button(action: {
-                            centerMapOnCheapestGasolineras()
-                        }) {
-                            HStack(spacing: 5) {
-                                Image(systemName: "star.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 15, height: 15)
-                                    .foregroundColor(.yellow)
-                                    .background(Color.white)
-                                    .clipShape(Circle())
-                                    .overlay(
-                                        Circle()
-                                            .stroke(Color.primary.opacity(0.4), lineWidth: 0.5) // Borde existente
-                                    )
-                                
-                                Text("Precio más bajo en \(viewModel.radius, specifier: "%.2f") km ")
-                                    .font(.subheadline)
-                                    .foregroundColor(.primary)
-                                
-                                Image(systemName: "eye")
-                                    .foregroundColor(.blue)
-                                    .font(.system(size: 12, weight: .bold))
-                                    .scaleEffect(animateEye ? 1.4 : 1.0) // Efecto de rebote
-                                    .animation(.easeOut(duration: 0.6), value: animateEye) // Animación suave
+                        if showPins {
+                            Button(action: {
+                                centerMapOnCheapestGasolineras()
+                            }) {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "star.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 15, height: 15)
+                                        .foregroundColor(.yellow)
+                                        .background(Color.white)
+                                        .clipShape(Circle())
+                                        .overlay(
+                                            Circle()
+                                                .stroke(Color.primary.opacity(0.4), lineWidth: 0.5) // Borde existente
+                                        )
+                                    
+                                    Text("Precio más bajo en \(viewModel.radius, specifier: "%.2f") km ")
+                                        .font(.subheadline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Image(systemName: "eye")
+                                        .foregroundColor(.blue)
+                                        .font(.system(size: 12, weight: .bold))
+                                        .scaleEffect(animateEye ? 1.4 : 1.0) // Efecto de rebote
+                                        .animation(.easeOut(duration: 0.6), value: animateEye) // Animación suave
+                                }
                             }
+                            .buttonStyle(PlainButtonStyle())
+                            .bubbleStyle()  // Aplicando el modificador de estilo burbuja
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.blue, lineWidth: 0.5) // Borde fino azul
+                            )
+                            .accessibilityLabel("Centrar en gasolineras más económicas")
                         }
-                        .buttonStyle(PlainButtonStyle())
-                        .bubbleStyle()  // Aplicando el modificador de estilo burbuja
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.blue, lineWidth: 0.5) // Borde fino azul
-                        )
-                        .accessibilityLabel("Centrar en gasolineras más económicas")
                         
                         Spacer()
                         
@@ -118,7 +119,7 @@ struct MapaGasolinerasView: View {
                         .accessibilityLabel("Centrar en mi ubicación actual")
                     }
                     .transition(.opacity)
-                }
+                
             }
             .padding(.bottom, 30)
             .padding(.horizontal, 10)
