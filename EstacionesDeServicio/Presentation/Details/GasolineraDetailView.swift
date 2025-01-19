@@ -9,6 +9,7 @@ struct GasolineraDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 15) {
+                
                 // Mapa con una anotación
                 Map(coordinateRegion: $detailRegion, annotationItems: [gasolinera]) { item in
                     MapAnnotation(coordinate: item.coordinate) {
@@ -27,7 +28,7 @@ struct GasolineraDetailView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
-                // Distancia al usuario
+                // Distancia al usuario (si está disponible)
                 if let distancia = gasolinera.distancia {
                     Text("A \(distancia / 1000, specifier: "%.2f") km")
                         .font(.headline)
@@ -51,14 +52,16 @@ struct GasolineraDetailView: View {
                         ForEach(FuelType.allCases) { fuel in
                             if let precio = gasolinera.price(for: fuel) {
                                 HStack {
+                                    // Vista para mostrar precio de un tipo de combustible
                                     FuelPrice(fuelType: fuel, price: precio, isHorizontal: true)
+                                    
                                     VStack(alignment: .leading, spacing: 8) {
                                         // Cálculo del costo de llenado
                                         Text("\(costoLlenado(precio), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                             .lineLimit(nil)
-                                            
+                                        
                                         // Texto para el promedio del tipo de combustible actual
                                         Text("\(viewModel.calcularPromedioEnRadio(fuelType: fuel), specifier: "%.3f") € / l promedio en \(Int(viewModel.radius)) km")
                                             .font(.caption)
@@ -72,20 +75,19 @@ struct GasolineraDetailView: View {
                 }
                 
                 // Horario
-                VStack(alignment: .leading, spacing: 5) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Horario")
                         .font(.headline)
-                    Text(gasolinera.horario)
                     
-                    // Indicador de disponibilidad
-                    if isOpenNow(horario: gasolinera.horario) {
-                        Text("¡Abierta ahora!")
-                            .font(.caption)
-                            .foregroundColor(.green)
-                    } else {
-                        Text("Cerrada ahora")
-                            .font(.caption)
-                            .foregroundColor(.red)
+                    // Separamos el horario por ';' y mostramos cada parte en su propia línea
+                    let horarioSegments = gasolinera.horario
+                        .split(separator: ";")
+                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    
+                    ForEach(horarioSegments, id: \.self) { segmento in
+                        Text(segmento)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
                 }
                 
@@ -119,39 +121,8 @@ struct GasolineraDetailView: View {
         mapItem.openInMaps()
     }
     
+    /// Calcula el costo de llenado dado un precio
     private func costoLlenado(_ precioPorLitro: Double) -> Double {
         return precioPorLitro * viewModel.fuelTankLiters
-    }
-    
-    private func isOpenNow(horario: String) -> Bool {
-        // Lógica simplificada para analizar si está abierta
-        let now = Date()
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.hour, .minute], from: now)
-        let currentMinutes = (components.hour ?? 0) * 60 + (components.minute ?? 0)
-        
-        // Horario formato "L-D: 07:00-22:00" o "24H"
-        if horario.contains("24H") {
-            return true
-        }
-        
-        if let range = horario.range(of: #"(\d{2}:\d{2})-(\d{2}:\d{2})"#, options: .regularExpression) {
-            let hours = horario[range].split(separator: "-")
-            if let start = hours.first, let end = hours.last {
-                let startMinutes = timeStringToMinutes(String(start))
-                let endMinutes = timeStringToMinutes(String(end))
-                return currentMinutes >= startMinutes && currentMinutes <= endMinutes
-            }
-        }
-        
-        return false
-    }
-    
-    private func timeStringToMinutes(_ time: String) -> Int {
-        let parts = time.split(separator: ":")
-        if let hour = Int(parts[0]), let minute = Int(parts[1]) {
-            return hour * 60 + minute
-        }
-        return 0
     }
 }

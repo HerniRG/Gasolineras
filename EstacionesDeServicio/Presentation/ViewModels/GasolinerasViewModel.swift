@@ -53,6 +53,12 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     
     private let locationManager = CLLocationManager()
     
+    // Precio mínimo del combustible seleccionado
+    @Published var minPrice: Double? = nil
+    
+    // Gasolinera(s) más barata(s) dentro del radio
+    @Published var cheapestGasolineras: [Gasolinera] = []
+    
     // Configuración inicial para la región (p.ej. Madrid)
     override init() {
         self.region = MKCoordinateRegion(
@@ -240,6 +246,16 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         }
         
         self.filteredGasolineras = filtered
+        
+        // Calcular el precio mínimo
+        if let min = filtered.compactMap({ $0.price(for: selectedFuelType) }).min() {
+            minPrice = min
+        } else {
+            minPrice = nil
+        }
+        
+        // Identificar las gasolineras más baratas dentro del radio
+        identifyCheapestGasolinera()
     }
     
     /// Método para actualizar las distancias de todas las gasolineras
@@ -258,10 +274,26 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
             return updated
         }
     }
-}
-
-extension GasolinerasViewModel {
-
+    
+    /// Identifica las gasolineras más baratas dentro del radio especificado
+    private func identifyCheapestGasolinera() {
+        // Filtrar gasolineras dentro del radio
+        let gasolinerasEnRadio = filteredGasolineras.filter { gasolinera in
+            if let distancia = gasolinera.distancia {
+                return distancia <= radius * 1000 // Convertir km a metros
+            }
+            return false
+        }
+        
+        // Encontrar el precio mínimo
+        if let minPrice = gasolinerasEnRadio.compactMap({ $0.price(for: selectedFuelType) }).min() {
+            // Filtrar todas las gasolineras con el precio mínimo
+            self.cheapestGasolineras = gasolinerasEnRadio.filter { $0.price(for: selectedFuelType) == minPrice }
+        } else {
+            self.cheapestGasolineras = []
+        }
+    }
+    
     /// Calcula el promedio del precio de un tipo de combustible en las gasolineras filtradas.
     /// - Parameter fuelType: Tipo de combustible. Si no se especifica, usa el combustible seleccionado.
     /// - Returns: El promedio del precio del combustible en el radio filtrado.
@@ -273,5 +305,10 @@ extension GasolinerasViewModel {
         // Retorna el promedio si hay precios disponibles, de lo contrario retorna 0.0
         guard !precios.isEmpty else { return 0.0 }
         return precios.reduce(0.0, +) / Double(precios.count)
+    }
+    
+    // MARK: - Función para actualizar la gasolinera más barata manualmente (opcional)
+    func updateCheapestGasolineraManually() {
+        identifyCheapestGasolinera()
     }
 }

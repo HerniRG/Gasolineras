@@ -13,8 +13,6 @@ struct GasolinerasView: View {
     var body: some View {
         NavigationView {
             content
-                // Quitamos el .navigationTitle("Gasolineras")
-                // para usar un título personalizado
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     
@@ -58,6 +56,11 @@ struct GasolinerasView: View {
             }
             .environmentObject(viewModel)
         }
+        .onChange(of: selectedTab) { newTab in
+            if newTab == .map {
+                viewModel.searchText = ""
+            }
+        }
     }
     
     @ViewBuilder
@@ -71,6 +74,8 @@ struct GasolinerasView: View {
                     .transition(.move(edge: .bottom))
             } else {
                 VStack(spacing: 0) {
+                    
+                    // --- Búsqueda y Filtros ---
                     if selectedTab == .list {
                         VStack(spacing: 8) {
                             searchBar
@@ -80,6 +85,7 @@ struct GasolinerasView: View {
                         .padding(.top, 8)
                     }
                     
+                    // --- Listado o Mapa ---
                     if selectedTab == .list {
                         if viewModel.filteredGasolineras.isEmpty {
                             VStack {
@@ -93,13 +99,16 @@ struct GasolinerasView: View {
                         } else {
                             ListView(gasolineras: viewModel.filteredGasolineras)
                                 .listStyle(PlainListStyle())
-                                .transition(.asymmetric(insertion: .move(edge: .leading),
-                                                        removal: .move(edge: .leading)))
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .leading),
+                                    removal: .move(edge: .leading)
+                                ))
                         }
                     } else {
                         mapView
                     }
                     
+                    // --- TabBar ---
                     if !keyboard.isKeyboardVisible {
                         CustomTabBar(selectedTab: $selectedTab, tabs: [.list, .map])
                             .padding(.bottom, 20)
@@ -115,40 +124,15 @@ struct GasolinerasView: View {
     
     @ViewBuilder
     private var mapView: some View {
-        ZStack {
-            MapaGasolinerasView(
-                gasolineras: viewModel.gasolineras,
-                region: $viewModel.region
-            )
-            .transition(.asymmetric(insertion: .move(edge: .trailing),
-                                    removal: .move(edge: .trailing)))
-            
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    FloatingButton(icon: "location.fill", action: {
-                        viewModel.requestLocationUpdate()
-                        centerOnUserLocation()
-                    })
-                    .padding(16)
-                }
-            }
-        }
-    }
-    
-    private func centerOnUserLocation() {
-        guard let currentLocation = viewModel.userLocation else {
-            print("Error: No se pudo obtener la ubicación actual del usuario.")
-            return
-        }
-        
-        withAnimation {
-            viewModel.region = MKCoordinateRegion(
-                center: currentLocation,
-                span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
-            )
-        }
+        // Ahora solo contenemos MapaGasolinerasView
+        MapaGasolinerasView(
+            gasolineras: viewModel.gasolineras,
+            region: $viewModel.region
+        )
+        .transition(
+            .asymmetric(insertion: .move(edge: .trailing),
+                        removal: .move(edge: .trailing))
+        )
     }
     
     private var searchBar: some View {
