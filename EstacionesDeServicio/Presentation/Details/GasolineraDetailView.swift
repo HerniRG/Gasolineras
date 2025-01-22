@@ -63,7 +63,7 @@ struct GasolineraDetailView: View {
                                             .lineLimit(nil)
                                         
                                         // Texto para el promedio del tipo de combustible actual
-                                        Text("\(viewModel.calcularPromedioEnRadio(fuelType: fuel), specifier: "%.3f") € / l promedio en \(Int(viewModel.radius)) km")
+                                        Text("\(viewModel.calcularPromedioEnRadio(fuelType: fuel), specifier: "%.3f") € / L precio medio en \(Int(viewModel.radius)) km")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                             .lineLimit(nil)

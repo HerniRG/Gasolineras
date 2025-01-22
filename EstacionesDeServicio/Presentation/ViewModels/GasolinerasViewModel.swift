@@ -29,6 +29,8 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     @Published var isLoading: Bool = true
     @Published var errorMessage: String? = nil
     @Published var searchText: String = ""
+    // Para llevar la cuenta de la gasolinera barata que toca mostrar
+    @Published var currentCheapestIndex = 0
     
     // MARK: - Filtros y Ordenación
     @Published var sortOption: SortOption = .distance {
@@ -292,6 +294,19 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         } else {
             self.cheapestGasolineras = []
         }
+    }
+    
+    /// Devuelve la siguiente gasolinera barata y avanza el índice.
+    /// Si no hay gasolineras, retorna nil.
+    func cycleCheapestGasolinera() -> Gasolinera? {
+        guard !cheapestGasolineras.isEmpty else { return nil }
+        
+        let gasolinera = cheapestGasolineras[currentCheapestIndex]
+        
+        // Avanzamos el índice, ciclando al principio si llegamos al final
+        currentCheapestIndex = (currentCheapestIndex + 1) % cheapestGasolineras.count
+        
+        return gasolinera
     }
     
     /// Calcula el promedio del precio de un tipo de combustible en las gasolineras filtradas.

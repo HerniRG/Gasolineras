@@ -10,7 +10,7 @@ struct PrecioResumenView: View {
                 Image(systemName: "info.circle")
                     .foregroundColor(.blue)
                 
-                Text("Datos dentro de un radio de \(viewModel.radius, specifier: "%.2f") km")
+                Text("Datos a un radio \(viewModel.radius, specifier: "%.2f") km de tu ubicación")
                     .font(.footnote)
                     .foregroundColor(.secondary)
             }
@@ -18,7 +18,7 @@ struct PrecioResumenView: View {
             // Datos de Precio Promedio y Gasolineras Disponibles
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Precio Promedio")
+                    Text("Precio medio")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Text("\(viewModel.calcularPromedioEnRadio(), specifier: "%.3f") €")
@@ -27,7 +27,7 @@ struct PrecioResumenView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("Gasolineras Disponibles")
+                    Text("Gasolineras disponibles")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Text("\(viewModel.filteredGasolineras.count)")

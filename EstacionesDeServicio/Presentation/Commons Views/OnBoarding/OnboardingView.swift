@@ -8,6 +8,7 @@ struct OnboardingView: View {
     
     @State private var selectedPage = 0
     @State private var selectedFuelType: FuelType = .gasolina95
+    @State private var fuelTankLitters: Double = 50
     
     var body: some View {
         VStack {
@@ -30,8 +31,9 @@ struct OnboardingView: View {
                 .tag(1)
                 
                 // 3) Pantalla de Selección de Combustible
-                FuelSelectionView(selectedFuelType: $selectedFuelType) {
+                FuelSelectionView(selectedFuelType: $selectedFuelType, fuelTankLiters: $fuelTankLitters) {
                     viewModel.selectedFuelType = selectedFuelType
+                    viewModel.fuelTankLiters = fuelTankLitters
                     onboardingCompleted = true
                 }
                 .tag(2)
