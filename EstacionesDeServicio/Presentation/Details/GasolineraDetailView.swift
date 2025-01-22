@@ -6,6 +6,92 @@ struct GasolineraDetailView: View {
     @State private var detailRegion = MKCoordinateRegion()
     @EnvironmentObject var viewModel: GasolinerasViewModel
     
+    // Variables de estado para el Confirmation Dialog
+    @State private var isShowingNavigationOptions = false
+    @State private var availableNavigationApps: [NavigationApp] = []
+    
+    enum NavigationApp: Identifiable {
+        case appleMaps
+        case googleMaps
+        case waze
+        
+        var id: String {
+            switch self {
+            case .appleMaps:
+                return "appleMaps"
+            case .googleMaps:
+                return "googleMaps"
+            case .waze:
+                return "waze"
+            }
+        }
+        
+        var displayName: String {
+            switch self {
+            case .appleMaps:
+                return "Apple Maps"
+            case .googleMaps:
+                return "Google Maps"
+            case .waze:
+                return "Waze"
+            }
+        }
+        
+        var iconName: String {
+            switch self {
+            case .appleMaps:
+                return "map.fill"
+            case .googleMaps:
+                return "g.circle.fill" // Asegúrate de tener un icono adecuado
+            case .waze:
+                return "wand.and.stars" // Asegúrate de tener un icono adecuado
+            }
+        }
+        
+        func open(coordinate: CLLocationCoordinate2D, name: String) {
+            switch self {
+            case .appleMaps:
+                let placemark = MKPlacemark(coordinate: coordinate)
+                let mapItem = MKMapItem(placemark: placemark)
+                mapItem.name = name
+                mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+            case .googleMaps:
+                if let url = URL(string: "comgooglemaps://?daddr=\(coordinate.latitude),\(coordinate.longitude)&directionsmode=driving") {
+                    print("Abriendo Google Maps con URL: \(url)")
+                    UIApplication.shared.open(url, options: [:]) { success in
+                        if !success {
+                            print("No se pudo abrir Google Maps. Intentando con Apple Maps como fallback.")
+                            openAppleMaps(coordinate: coordinate, name: name)
+                        }
+                    }
+                } else {
+                    print("URL inválida para Google Maps. Abriendo Apple Maps como fallback.")
+                    openAppleMaps(coordinate: coordinate, name: name)
+                }
+            case .waze:
+                if let url = URL(string: "waze://?ll=\(coordinate.latitude),\(coordinate.longitude)&navigate=yes") {
+                    print("Abriendo Waze con URL: \(url)")
+                    UIApplication.shared.open(url, options: [:]) { success in
+                        if !success {
+                            print("No se pudo abrir Waze. Intentando con Apple Maps como fallback.")
+                            openAppleMaps(coordinate: coordinate, name: name)
+                        }
+                    }
+                } else {
+                    print("URL inválida para Waze. Abriendo Apple Maps como fallback.")
+                    openAppleMaps(coordinate: coordinate, name: name)
+                }
+            }
+        }
+        
+        private func openAppleMaps(coordinate: CLLocationCoordinate2D, name: String) {
+            let placemark = MKPlacemark(coordinate: coordinate)
+            let mapItem = MKMapItem(placemark: placemark)
+            mapItem.name = name
+            mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+        }
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 15) {
@@ -94,7 +180,10 @@ struct GasolineraDetailView: View {
                 Spacer()
                 
                 // Botón para abrir en Mapas
-                Button(action: openInMaps) {
+                Button(action: {
+                    prepareNavigationOptions()
+                    isShowingNavigationOptions = true
+                }) {
                     Text("Cómo llegar")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -113,12 +202,53 @@ struct GasolineraDetailView: View {
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             )
         }
+        .confirmationDialog("Cómo llegar", isPresented: $isShowingNavigationOptions, titleVisibility: .visible) {
+            ForEach(availableNavigationApps) { app in
+                Button(action: {
+                    app.open(coordinate: gasolinera.coordinate, name: gasolinera.rotulo)
+                }) {
+                    Label(app.displayName, systemImage: app.iconName)
+                }
+            }
+            Button("Cancelar", role: .cancel) { }
+        }
     }
     
-    private func openInMaps() {
-        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: gasolinera.coordinate))
-        mapItem.name = gasolinera.rotulo
-        mapItem.openInMaps()
+    // MARK: - Funciones Auxiliares
+    
+    /// Prepara la lista de aplicaciones de navegación disponibles
+    private func prepareNavigationOptions() {
+        var apps: [NavigationApp] = [.appleMaps]
+        
+        if canOpenGoogleMaps() {
+            apps.append(.googleMaps)
+        } else {
+            print("Google Maps no está instalado.")
+        }
+        
+        if canOpenWaze() {
+            apps.append(.waze)
+        } else {
+            print("Waze no está instalado.")
+        }
+        
+        availableNavigationApps = apps
+    }
+    
+    /// Verifica si Google Maps está instalado
+    private func canOpenGoogleMaps() -> Bool {
+        guard let url = URL(string: "comgooglemaps://") else { return false }
+        let canOpen = UIApplication.shared.canOpenURL(url)
+        print("¿Puede abrir Google Maps? \(canOpen)")
+        return canOpen
+    }
+    
+    /// Verifica si Waze está instalado
+    private func canOpenWaze() -> Bool {
+        guard let url = URL(string: "waze://") else { return false }
+        let canOpen = UIApplication.shared.canOpenURL(url)
+        print("¿Puede abrir Waze? \(canOpen)")
+        return canOpen
     }
     
     /// Calcula el costo de llenado dado un precio

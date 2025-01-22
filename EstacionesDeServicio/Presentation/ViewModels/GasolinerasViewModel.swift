@@ -31,6 +31,8 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     @Published var searchText: String = ""
     // Para llevar la cuenta de la gasolinera barata que toca mostrar
     @Published var currentCheapestIndex = 0
+    @Published var retryCount: Int = 0
+    private let maxRetries: Int = 3
     
     // MARK: - Filtros y Ordenación
     @Published var sortOption: SortOption = .distance {
@@ -71,6 +73,22 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         setupLocationManager()
         self.selectedFuelType = FuelType(rawValue: selectedFuelTypeRaw) ?? .gasolina95
         self.fuelTankLiters = fuelTankLitersRaw
+        
+        // Observadores de ciclo de vida
+        NotificationCenter.default.addObserver(self, selector: #selector(appDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
+    }
+
+    @objc private func appDidBecomeActive() {
+        // Reiniciar actualizaciones de ubicación al volver a la app
+        if locationAuthorized {
+            locationManager.startUpdatingLocation()
+        }
+    }
+
+    @objc private func appWillResignActive() {
+        // Detener actualizaciones de ubicación al salir de la app
+        locationManager.stopUpdatingLocation()
     }
     
     // MARK: - Configuración e inicialización del LocationManager
@@ -127,6 +145,10 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
         
+        DispatchQueue.main.async {
+            self.retryCount = 0 // Resetea el contador de reintentos
+        }
+        
         if userLocation == nil {
             self.userLocation = loc.coordinate
             self.region = MKCoordinateRegion(
@@ -142,10 +164,37 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        errorMessage = "Error al obtener la ubicación: \(error.localizedDescription)"
-        isLoading = false
+        if let clError = error as? CLError {
+            switch clError.code {
+            case .denied:
+                // Permisos denegados: informar al usuario y detener actualizaciones
+                DispatchQueue.main.async {
+                    self.errorMessage = "Permisos de localización denegados. Actívalos en Ajustes."
+                    self.isLoading = false
+                }
+            default:
+                // Otros errores: intentar reiniciar las actualizaciones con límite de reintentos
+                if retryCount < maxRetries {
+                    retryCount += 1
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        self.locationManager.startUpdatingLocation()
+                    }
+                } else {
+                    // Excedió el número máximo de reintentos: informar al usuario
+                    DispatchQueue.main.async {
+                        self.errorMessage = "No se pudo obtener la ubicación después de varios intentos."
+                        self.isLoading = false
+                    }
+                }
+            }
+        } else {
+            // Errores no relacionados con Core Location
+            DispatchQueue.main.async {
+                self.errorMessage = "Error al obtener la ubicación: \(error.localizedDescription)"
+                self.isLoading = false
+            }
+        }
     }
-    
     // MARK: - Carga de datos
     func loadGasolineras() {
         Task {
