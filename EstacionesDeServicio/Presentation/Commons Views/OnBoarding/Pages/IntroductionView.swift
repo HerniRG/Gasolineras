@@ -42,7 +42,7 @@ struct IntroductionView: View {
 struct IntroductionView_Previews: PreviewProvider {
     static var previews: some View {
         IntroductionView {
-            print("Siguiente presionado")
+            debugPrint("Siguiente presionado")
         }
     }
 }

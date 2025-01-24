@@ -5,22 +5,20 @@ import MapKit
 
 @MainActor
 final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
-    
     // MARK: - Variables de Filtro/Estado
     @AppStorage("selectedFuelTypeRaw") private var selectedFuelTypeRaw: String = FuelType.gasolina95.rawValue
     @Published var selectedFuelType: FuelType = .gasolina95 {
         didSet {
             selectedFuelTypeRaw = selectedFuelType.rawValue
-            updateFilteredGasolineras() // Actualizar filtros cuando cambia el tipo de combustible
+            updateFilteredGasolineras()
         }
     }
     
-    // Nueva propiedad para los litros del depósito de combustible
     @AppStorage("fuelTankLiters") private var fuelTankLitersRaw: Double = 50.0
     @Published var fuelTankLiters: Double = 50.0 {
         didSet {
             fuelTankLitersRaw = fuelTankLiters
-            updateFilteredGasolineras() // Actualizar filtros si es necesario
+            updateFilteredGasolineras()
         }
     }
     
@@ -29,41 +27,37 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     @Published var isLoading: Bool = true
     @Published var errorMessage: String? = nil
     @Published var searchText: String = ""
-    // Para llevar la cuenta de la gasolinera barata que toca mostrar
+    
     @Published var currentCheapestIndex = 0
     @Published var retryCount: Int = 0
     private let maxRetries: Int = 3
     
-    // MARK: - Filtros y Ordenación
     @Published var sortOption: SortOption = .distance {
         didSet {
             updateFilteredGasolineras()
         }
     }
     
-    @Published var radius: Double = 5.0 { // Radio en kilómetros
+    @Published var radius: Double = 5.0 {
         didSet {
             updateFilteredGasolineras()
         }
     }
     
-    // MARK: - Ubicación
     @Published var region: MKCoordinateRegion
     @Published var userLocation: CLLocationCoordinate2D?
     
-    // MARK: - Permisos de localización
     @Published var locationAuthorized: Bool = false
     @Published var locationDenied: Bool = false
     
     private let locationManager = CLLocationManager()
     
-    // Precio mínimo del combustible seleccionado
     @Published var minPrice: Double? = nil
-    
-    // Gasolinera(s) más barata(s) dentro del radio
     @Published var cheapestGasolineras: [Gasolinera] = []
     
-    // Configuración inicial para la región (p.ej. Madrid)
+    @Published var showNotification: Bool = false
+    @Published var notificationText: String = ""
+    
     override init() {
         self.region = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 40.4168, longitude: -3.7038),
@@ -74,31 +68,25 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         self.selectedFuelType = FuelType(rawValue: selectedFuelTypeRaw) ?? .gasolina95
         self.fuelTankLiters = fuelTankLitersRaw
         
-        // Observadores de ciclo de vida
         NotificationCenter.default.addObserver(self, selector: #selector(appDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
     }
 
     @objc private func appDidBecomeActive() {
-        // Reiniciar actualizaciones de ubicación al volver a la app
         if locationAuthorized {
             locationManager.startUpdatingLocation()
         }
     }
 
     @objc private func appWillResignActive() {
-        // Detener actualizaciones de ubicación al salir de la app
         locationManager.stopUpdatingLocation()
     }
     
-    // MARK: - Configuración e inicialización del LocationManager
     private func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-        // No pedimos permisos aquí directamente si queremos hacerlo desde el Onboarding.
     }
     
-    /// Comprueba y actualiza los flags `locationAuthorized` y `locationDenied`
     func checkAuthorizationStatus() {
         let status = CLLocationManager.authorizationStatus()
         switch status {
@@ -110,7 +98,6 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
             locationAuthorized = false
             locationDenied = true
         case .notDetermined:
-            // Todavía no ha dicho ni Sí ni No
             locationAuthorized = false
             locationDenied = false
         @unknown default:
@@ -119,12 +106,10 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         }
     }
     
-    /// Solicita al usuario el permiso de localización
     func requestLocationPermission() {
         locationManager.requestWhenInUseAuthorization()
     }
     
-    /// Abre la app de Ajustes (para cuando el usuario ha denegado los permisos)
     func openSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         if UIApplication.shared.canOpenURL(url) {
@@ -132,7 +117,6 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         }
     }
     
-    /// Solicita actualizar la ubicación del usuario
     func requestLocationUpdate() {
         locationManager.requestLocation()
     }
@@ -144,11 +128,9 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
-        
-        DispatchQueue.main.async {
-            self.retryCount = 0 // Resetea el contador de reintentos
-        }
-        
+
+        self.retryCount = 0
+
         if userLocation == nil {
             self.userLocation = loc.coordinate
             self.region = MKCoordinateRegion(
@@ -158,8 +140,8 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
             self.loadGasolineras()
         } else {
             self.userLocation = loc.coordinate
-            self.updateDistances() // Recalcular distancias para todas las gasolineras
-            self.updateFilteredGasolineras() // Actualizar el filtrado basado en la nueva ubicación
+            self.updateDistances()
+            self.updateFilteredGasolineras()
         }
     }
     
@@ -167,54 +149,42 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         if let clError = error as? CLError {
             switch clError.code {
             case .denied:
-                // Permisos denegados: informar al usuario y detener actualizaciones
-                DispatchQueue.main.async {
-                    self.errorMessage = "Permisos de localización denegados. Actívalos en Ajustes."
-                    self.isLoading = false
-                }
+                self.errorMessage = "Permisos de localización denegados. Actívalos en Ajustes."
+                self.isLoading = false
             default:
-                // Otros errores: intentar reiniciar las actualizaciones con límite de reintentos
                 if retryCount < maxRetries {
                     retryCount += 1
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    Task {
+                        try await Task.sleep(nanoseconds: 2 * 1_000_000_000)
                         self.locationManager.startUpdatingLocation()
                     }
                 } else {
-                    // Excedió el número máximo de reintentos: informar al usuario
-                    DispatchQueue.main.async {
-                        self.errorMessage = "No se pudo obtener la ubicación después de varios intentos."
-                        self.isLoading = false
-                    }
+                    self.errorMessage = "No se pudo obtener la ubicación después de varios intentos."
+                    self.isLoading = false
                 }
             }
         } else {
-            // Errores no relacionados con Core Location
-            DispatchQueue.main.async {
-                self.errorMessage = "Error al obtener la ubicación: \(error.localizedDescription)"
-                self.isLoading = false
-            }
+            self.errorMessage = "Error al obtener la ubicación: \(error.localizedDescription)"
+            self.isLoading = false
         }
     }
+    
     // MARK: - Carga de datos
     func loadGasolineras() {
         Task {
             do {
-                // Verificar si hay datos almacenados y si son del mismo día
                 if let lastUpdated = try SwiftDataManager.shared.getLastUpdatedDate(),
                    Calendar.current.isDateInToday(lastUpdated) {
-                    // Cargar desde la base de datos
                     let cachedGasolineras = try SwiftDataManager.shared.fetchGasolineras()
                     self.gasolineras = cachedGasolineras
                     self.updateDistances()
                     self.updateFilteredGasolineras()
                     self.isLoading = false
                 } else {
-                    // Cargar desde la API
                     try await fetchFromAPI()
                 }
             } catch {
-                // En caso de error al acceder a la base de datos, intentar cargar desde la API
-                print("Error al acceder a la base de datos: \(error.localizedDescription)")
+                debugPrint("Error al acceder a la base de datos: \(error.localizedDescription)")
                 try? await fetchFromAPI()
             }
         }
@@ -226,7 +196,6 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         loadGasolineras()
     }
     
-    // MARK: - Fetch desde la API y Guardar en la Base de Datos
     private func fetchFromAPI() async throws {
         isLoading = true
         errorMessage = nil
@@ -238,7 +207,6 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
             self.updateFilteredGasolineras()
             isLoading = false
             
-            // Guardar en la base de datos
             try await SwiftDataManager.shared.saveGasolineras(result)
         } catch {
             self.errorMessage = error.localizedDescription
@@ -250,7 +218,6 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     func updateFilteredGasolineras() {
         var filtered = gasolineras
         
-        // Filtro por texto
         if !searchText.isEmpty {
             filtered = filtered.filter {
                 $0.rotulo.lowercased().contains(searchText.lowercased()) ||
@@ -258,12 +225,10 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
             }
         }
         
-        // Filtro por tipo de combustible
         filtered = filtered.filter { gasolinera in
             gasolinera.price(for: selectedFuelType) != nil
         }
         
-        // Filtro por radio
         if let _ = userLocation {
             let radiusInMeters = radius * 1000
             filtered = filtered.filter { gasolinera in
@@ -274,7 +239,6 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
             }
         }
         
-        // Ordenación
         switch sortOption {
         case .distance:
             filtered.sort {
@@ -288,7 +252,6 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
                 if priceA != priceB {
                     return priceA < priceB
                 } else {
-                    // Si los precios son iguales, ordenar por distancia
                     let distanceA = a.distancia ?? Double.infinity
                     let distanceB = b.distancia ?? Double.infinity
                     return distanceA < distanceB
@@ -298,18 +261,15 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         
         self.filteredGasolineras = filtered
         
-        // Calcular el precio mínimo
         if let min = filtered.compactMap({ $0.price(for: selectedFuelType) }).min() {
             minPrice = min
         } else {
             minPrice = nil
         }
         
-        // Identificar las gasolineras más baratas dentro del radio
         identifyCheapestGasolinera()
     }
     
-    /// Método para actualizar las distancias de todas las gasolineras
     func updateDistances() {
         guard let userLocation = userLocation else { return }
         let userCL = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
@@ -326,53 +286,109 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         }
     }
     
-    /// Identifica las gasolineras más baratas dentro del radio especificado
     private func identifyCheapestGasolinera() {
-        // Filtrar gasolineras dentro del radio
         let gasolinerasEnRadio = filteredGasolineras.filter { gasolinera in
             if let distancia = gasolinera.distancia {
-                return distancia <= radius * 1000 // Convertir km a metros
+                return distancia <= radius * 1000
             }
             return false
         }
         
-        // Encontrar el precio mínimo
         if let minPrice = gasolinerasEnRadio.compactMap({ $0.price(for: selectedFuelType) }).min() {
-            // Filtrar todas las gasolineras con el precio mínimo
             self.cheapestGasolineras = gasolinerasEnRadio.filter { $0.price(for: selectedFuelType) == minPrice }
         } else {
             self.cheapestGasolineras = []
         }
     }
     
-    /// Devuelve la siguiente gasolinera barata y avanza el índice.
-    /// Si no hay gasolineras, retorna nil.
-    func cycleCheapestGasolinera() -> Gasolinera? {
+    func cycleCheapestGasolinera() -> (Gasolinera, Int)? {
         guard !cheapestGasolineras.isEmpty else { return nil }
         
         let gasolinera = cheapestGasolineras[currentCheapestIndex]
+        let displayIndex = currentCheapestIndex + 1  // Índice 1-based para la notificación
         
-        // Avanzamos el índice, ciclando al principio si llegamos al final
         currentCheapestIndex = (currentCheapestIndex + 1) % cheapestGasolineras.count
         
-        return gasolinera
+        return (gasolinera, displayIndex)
     }
     
-    /// Calcula el promedio del precio de un tipo de combustible en las gasolineras filtradas.
-    /// - Parameter fuelType: Tipo de combustible. Si no se especifica, usa el combustible seleccionado.
-    /// - Returns: El promedio del precio del combustible en el radio filtrado.
     func calcularPromedioEnRadio(fuelType: FuelType? = nil) -> Double {
         let tipoCombustible = fuelType ?? selectedFuelType
-        // Filtra solo las gasolineras que tienen un precio válido para el tipo de combustible dado
         let precios = filteredGasolineras.compactMap { $0.price(for: tipoCombustible) }
 
-        // Retorna el promedio si hay precios disponibles, de lo contrario retorna 0.0
         guard !precios.isEmpty else { return 0.0 }
         return precios.reduce(0.0, +) / Double(precios.count)
     }
     
-    // MARK: - Función para actualizar la gasolinera más barata manualmente (opcional)
     func updateCheapestGasolineraManually() {
         identifyCheapestGasolinera()
+    }
+    
+    // MARK: - Funciones de Centrado
+    
+    func centerOnUserLocation() {
+        guard let currentLocation = userLocation else {
+            debugPrint("Error: No se pudo obtener la ubicación actual del usuario.")
+            return
+        }
+
+        let currentDelta = region.span.latitudeDelta
+
+        Task {
+            if currentDelta > 5.0 {
+                // Salto rápido sin animación
+                region = MKCoordinateRegion(
+                    center: currentLocation,
+                    span: MKCoordinateSpan(latitudeDelta: 1.0, longitudeDelta: 1.0)
+                )
+
+                // Animación posterior
+                try await Task.sleep(nanoseconds: 100_000_000) // 0.1 segundos
+                withAnimation {
+                    region = MKCoordinateRegion(
+                        center: currentLocation,
+                        span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                    )
+                }
+            } else {
+                // Zoom no tan alejado: animamos directamente
+                withAnimation {
+                    region = MKCoordinateRegion(
+                        center: currentLocation,
+                        span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                    )
+                }
+            }
+        }
+    }
+    
+    func centerMapOnCheapestGasolineras() {
+        guard let (cheapestGas, displayIndex) = cycleCheapestGasolinera() else { return }
+
+        let newRegion = MKCoordinateRegion(
+            center: cheapestGas.coordinate,
+            span: MKCoordinateSpan(
+                latitudeDelta: region.span.latitudeDelta,
+                longitudeDelta: region.span.longitudeDelta
+            )
+        )
+
+        Task {
+            withAnimation {
+                region = newRegion
+                if cheapestGasolineras.count > 1 {
+                    notificationText = "Gasolinera con el precio más bajo centrada (\(displayIndex) de \(cheapestGasolineras.count))"
+                } else {
+                    notificationText = "Gasolinera con el precio más bajo centrada"
+                }
+                showNotification = true
+            }
+
+            // Oculta la notificación a los 3 segundos
+            try await Task.sleep(nanoseconds: 3 * 1_000_000_000)
+            withAnimation {
+                showNotification = false
+            }
+        }
     }
 }

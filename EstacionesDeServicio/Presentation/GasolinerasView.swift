@@ -126,8 +126,7 @@ struct GasolinerasView: View {
     private var mapView: some View {
         // Ahora solo contenemos MapaGasolinerasView
         MapaGasolinerasView(
-            gasolineras: viewModel.gasolineras,
-            region: $viewModel.region
+            gasolineras: viewModel.gasolineras
         )
         .transition(
             .asymmetric(insertion: .move(edge: .trailing),

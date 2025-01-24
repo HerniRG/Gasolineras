@@ -11,7 +11,7 @@ struct ErrorView: View {
                 .foregroundColor(.red)
             Text("Algo salió mal")
                 .font(.headline)
-                .foregroundColor(.primary) // Adapta el texto al modo light/dark
+                .foregroundColor(.primary)
             Text(error)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -19,17 +19,17 @@ struct ErrorView: View {
             Button(action: retryAction) {
                 Text("Reintentar")
                     .padding()
-                    .frame(maxWidth: .infinity) // Botón más grande
-                    .background(Color.accentColor) // Usa el color de acento
-                    .foregroundColor(.white) // Blanco sobre color de acento
+                    .frame(maxWidth: .infinity)
+                    .background(Color.accentColor)
+                    .foregroundColor(.white)
                     .cornerRadius(10)
             }
-            .padding(.horizontal) // Añade un poco de espacio a los lados
+            .padding(.horizontal)
         }
         .padding()
-        .background(Color(UIColor.systemBackground)) // Fondo adaptable
+        .background(Color(UIColor.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4) // Sombra sutil
+        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
         .padding()
     }
 }

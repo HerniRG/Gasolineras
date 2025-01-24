@@ -57,28 +57,28 @@ struct GasolineraDetailView: View {
                 mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
             case .googleMaps:
                 if let url = URL(string: "comgooglemaps://?daddr=\(coordinate.latitude),\(coordinate.longitude)&directionsmode=driving") {
-                    print("Abriendo Google Maps con URL: \(url)")
+                    debugPrint("Abriendo Google Maps con URL: \(url)")
                     UIApplication.shared.open(url, options: [:]) { success in
                         if !success {
-                            print("No se pudo abrir Google Maps. Intentando con Apple Maps como fallback.")
+                            debugPrint("No se pudo abrir Google Maps. Intentando con Apple Maps como fallback.")
                             openAppleMaps(coordinate: coordinate, name: name)
                         }
                     }
                 } else {
-                    print("URL inválida para Google Maps. Abriendo Apple Maps como fallback.")
+                    debugPrint("URL inválida para Google Maps. Abriendo Apple Maps como fallback.")
                     openAppleMaps(coordinate: coordinate, name: name)
                 }
             case .waze:
                 if let url = URL(string: "waze://?ll=\(coordinate.latitude),\(coordinate.longitude)&navigate=yes") {
-                    print("Abriendo Waze con URL: \(url)")
+                    debugPrint("Abriendo Waze con URL: \(url)")
                     UIApplication.shared.open(url, options: [:]) { success in
                         if !success {
-                            print("No se pudo abrir Waze. Intentando con Apple Maps como fallback.")
+                            debugPrint("No se pudo abrir Waze. Intentando con Apple Maps como fallback.")
                             openAppleMaps(coordinate: coordinate, name: name)
                         }
                     }
                 } else {
-                    print("URL inválida para Waze. Abriendo Apple Maps como fallback.")
+                    debugPrint("URL inválida para Waze. Abriendo Apple Maps como fallback.")
                     openAppleMaps(coordinate: coordinate, name: name)
                 }
             }
@@ -211,6 +211,8 @@ struct GasolineraDetailView: View {
                 }
             }
             Button("Cancelar", role: .cancel) { }
+        } message: {
+            Text("Elige la aplicación de mapas")
         }
     }
     
@@ -223,13 +225,13 @@ struct GasolineraDetailView: View {
         if canOpenGoogleMaps() {
             apps.append(.googleMaps)
         } else {
-            print("Google Maps no está instalado.")
+            debugPrint("Google Maps no está instalado.")
         }
         
         if canOpenWaze() {
             apps.append(.waze)
         } else {
-            print("Waze no está instalado.")
+            debugPrint("Waze no está instalado.")
         }
         
         availableNavigationApps = apps
@@ -239,7 +241,7 @@ struct GasolineraDetailView: View {
     private func canOpenGoogleMaps() -> Bool {
         guard let url = URL(string: "comgooglemaps://") else { return false }
         let canOpen = UIApplication.shared.canOpenURL(url)
-        print("¿Puede abrir Google Maps? \(canOpen)")
+        debugPrint("¿Puede abrir Google Maps? \(canOpen)")
         return canOpen
     }
     
@@ -247,7 +249,7 @@ struct GasolineraDetailView: View {
     private func canOpenWaze() -> Bool {
         guard let url = URL(string: "waze://") else { return false }
         let canOpen = UIApplication.shared.canOpenURL(url)
-        print("¿Puede abrir Waze? \(canOpen)")
+        debugPrint("¿Puede abrir Waze? \(canOpen)")
         return canOpen
     }
     
