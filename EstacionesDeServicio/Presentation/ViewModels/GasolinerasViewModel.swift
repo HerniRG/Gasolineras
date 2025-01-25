@@ -27,6 +27,8 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     @Published var isLoading: Bool = true
     @Published var errorMessage: String? = nil
     @Published var searchText: String = ""
+    // Propiedades para la búsqueda global
+    @Published var globalSearchResults: [Gasolinera] = []
     
     @Published var currentCheapestIndex = 0
     @Published var retryCount: Int = 0
@@ -323,6 +325,39 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     func updateCheapestGasolineraManually() {
         identifyCheapestGasolinera()
     }
+    
+    // MARK: - Función para realizar la búsqueda global
+    // MARK: - Función para realizar la búsqueda global
+    func performGlobalSearch(query: String) {
+        if query.isEmpty {
+            globalSearchResults = []
+            return
+        }
+        
+        // Filtrar gasolineras que contienen el término de búsqueda en rotulo, localidad, provincia o direccion
+        let lowercasedQuery = query.lowercased()
+        var filtered = gasolineras.filter { gasolinera in
+            return gasolinera.rotulo.lowercased().contains(lowercasedQuery) ||
+                   gasolinera.localidad.lowercased().contains(lowercasedQuery) ||
+                   gasolinera.provincia.lowercased().contains(lowercasedQuery) ||
+                   gasolinera.direccion.lowercased().contains(lowercasedQuery)
+        }
+        
+        // Ordenar las gasolineras filtradas por distancia (más cercana primero)
+        filtered.sort { a, b in
+            if let aDistance = a.distancia, let bDistance = b.distancia {
+                return aDistance < bDistance
+            } else if a.distancia != nil {
+                return true // Si solo a tiene distancia, va primero
+            } else {
+                return false // Si solo b tiene distancia o ninguna, b va primero
+            }
+        }
+        
+        // Asignar los resultados ordenados a globalSearchResults
+        globalSearchResults = filtered
+    }
+
     
     // MARK: - Funciones de Centrado
     

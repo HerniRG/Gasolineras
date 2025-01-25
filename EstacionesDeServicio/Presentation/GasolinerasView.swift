@@ -7,6 +7,7 @@ struct GasolinerasView: View {
     @State private var isShowingPreferences: Bool = false
     @State private var isShowingGPSActivation: Bool = false
     @StateObject private var keyboard = KeyboardObserver()
+    @State private var isNavigatingToSearch: Bool = false  // Nuevo estado para la navegación
     
     enum Tab { case list, map }
     
@@ -61,6 +62,11 @@ struct GasolinerasView: View {
                 viewModel.searchText = ""
             }
         }
+        // Navegación a SearchView
+        .fullScreenCover(isPresented: $isNavigatingToSearch) {
+            SearchView()
+                .environmentObject(viewModel) // Asegúrate de pasar el EnvironmentObject si es necesario
+        }
     }
     
     @ViewBuilder
@@ -78,11 +84,28 @@ struct GasolinerasView: View {
                     // --- Búsqueda y Filtros ---
                     if selectedTab == .list {
                         VStack(spacing: 8) {
-                            searchBar
+                            // Botón de búsqueda que ocupa todo el ancho
+                            Button(action: {
+                                isNavigatingToSearch = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "magnifyingglass")
+                                        .foregroundColor(.gray)
+                                    Text("Buscar gasolineras o ubicación")
+                                        .foregroundColor(.gray)
+                                        .frame(maxWidth: .infinity, alignment: .leading) // Alinear a la izquierda
+                                }
+                                .padding(10)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                            }
+                            .frame(maxWidth: .infinity) // Ocupar todo el ancho disponible
+                            .padding(.horizontal, 16) // Márgenes laterales
+                            
                             FilterControlsView()
                                 .padding(.horizontal)
                         }
-                        .padding(.top, 8)
+                        .padding(.top, 4) // Reducir el espacio encima (ajusta según sea necesario)
                     }
                     
                     // --- Listado o Mapa ---
@@ -132,27 +155,5 @@ struct GasolinerasView: View {
             .asymmetric(insertion: .move(edge: .trailing),
                         removal: .move(edge: .trailing))
         )
-    }
-    
-    private var searchBar: some View {
-        HStack {
-            TextField("Buscar por gasolinera o localidad...", text: $viewModel.searchText)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding(.horizontal, 8)
-                .onChange(of: viewModel.searchText) {
-                    viewModel.updateFilteredGasolineras()
-                }
-            if !viewModel.searchText.isEmpty {
-                Button(action: {
-                    viewModel.searchText = ""
-                    viewModel.updateFilteredGasolineras()
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.gray)
-                }
-                .padding(.trailing, 8)
-            }
-        }
-        .padding(.horizontal, 16)
     }
 }

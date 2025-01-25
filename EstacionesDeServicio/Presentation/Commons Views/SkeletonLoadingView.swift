@@ -32,13 +32,11 @@ struct SkeletonLoadingView: View {
 
 struct SkeletonSearchBar: View {
     var body: some View {
-        HStack {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.gray.opacity(0.3))
-                .frame(height: 36)
-                .shimmerEffect()
-        }
-        .padding(.horizontal, 16)
+        RoundedRectangle(cornerRadius: 10)
+            .fill(Color.gray.opacity(0.3))
+            .frame(height: 36)
+            .frame(maxWidth: .infinity)
+            .shimmerEffect()
     }
 }
 
