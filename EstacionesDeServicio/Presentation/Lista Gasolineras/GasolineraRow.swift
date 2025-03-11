@@ -24,36 +24,44 @@ struct GasolineraRow: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
-            // Muestra solamente el tipo de combustible seleccionado
             if let selectedFuelPrice = getSelectedFuelPrice() {
-                // Vista personalizada del precio, con layout horizontal
-                HStack {
+                // Vista personalizada del precio, con layout vertical
+                VStack(alignment: .leading, spacing: 8) {
                     FuelPrice(
                         fuelType: viewModel.selectedFuelType,
                         price: selectedFuelPrice,
                         isHorizontal: true
                     )
+                    .frame(maxWidth: 250, alignment: .leading)
                     .padding(.vertical, 8)
                     
                     // Cálculo del costo de llenado
-                    VStack(alignment: .leading, spacing: 8) {
-                        // Cálculo del costo de llenado
-                        Text("\(costoLlenado(selectedFuelPrice), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(nil)
-                        
-                        // Nuevo texto para el promedio
-                        Text("\(viewModel.calcularPromedioEnRadio(), specifier: "%.3f") € / L precio medio en \(Int(viewModel.radius)) km")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(nil)
-                    }
+                    Text("\(costoLlenado(selectedFuelPrice), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) litros)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    // Nuevo texto para la diferencia de precio con una explicación más clara
+                    let diferenciaPrecio = selectedFuelPrice - viewModel.calcularPromedioEnRadio()
+                    let esMasCaro = diferenciaPrecio >= 0
+                    let descripcion = esMasCaro ? "más caro" : "más barato"
+
+                    Text("\(abs(diferenciaPrecio), specifier: "%.3f") €/L \(descripcion) respecto a la media en \(Int(viewModel.radius)) km")
+                        .font(.caption)
+                        .foregroundColor(esMasCaro ? .red : .green)
+                        .lineLimit(nil)
                 }
             } else {
                 Text("El tipo de combustible seleccionado no está disponible.")
                     .font(.caption)
                     .foregroundColor(.red)
+            }
+            
+            // Badge si es la gasolinera más barata
+            if viewModel.cheapestGasolineras.contains(where: { $0.id == gasolinera.id }) {
+                Text("💰 Mejor precio en la zona")
+                    .font(.caption)
+                    .bold()
+                    .foregroundColor(.green)
             }
         }
         .padding(.vertical, 8)
@@ -92,4 +100,3 @@ struct GasolineraRow: View {
         return precioPorLitro * viewModel.fuelTankLiters
     }
 }
-

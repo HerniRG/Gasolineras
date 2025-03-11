@@ -134,26 +134,36 @@ struct GasolineraDetailView: View {
                         .font(.headline)
                     
                     // Lista de precios con FuelPrice y cálculo de llenado
-                    VStack(spacing: 15) {
-                        ForEach(FuelType.allCases) { fuel in
+                    let availableFuels = FuelType.allCases.filter { gasolinera.price(for: $0) != nil }
+                    
+                    VStack(alignment: .leading, spacing: 15) {
+                        ForEach(availableFuels.indices, id: \.self) { index in
+                            let fuel = availableFuels[index]
                             if let precio = gasolinera.price(for: fuel) {
-                                HStack {
-                                    // Vista para mostrar precio de un tipo de combustible
+                                VStack(alignment: .leading, spacing: 8) {
                                     FuelPrice(fuelType: fuel, price: precio, isHorizontal: true)
-                                    
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        // Cálculo del costo de llenado
-                                        Text("\(costoLlenado(precio), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) l)")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .lineLimit(nil)
-                                        
-                                        // Texto para el promedio del tipo de combustible actual
-                                        Text("\(viewModel.calcularPromedioEnRadio(fuelType: fuel), specifier: "%.3f") € / L precio medio en \(Int(viewModel.radius)) km")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .lineLimit(nil)
-                                    }
+                                        .frame(maxWidth: 250, alignment: .leading)
+
+                                    Text("\(costoLlenado(precio), specifier: "%.2f") € / llenado (\(Int(viewModel.fuelTankLiters)) litros)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                                    let diferenciaPrecio = precio - viewModel.calcularPromedioEnRadio(fuelType: fuel)
+                                    let esMasCaro = diferenciaPrecio >= 0
+                                    let descripcion = esMasCaro ? "más caro" : "más barato"
+
+                                    Text("\(abs(diferenciaPrecio), specifier: "%.3f") €/L \(descripcion) respecto a la media en \(Int(viewModel.radius)) km")
+                                        .font(.caption)
+                                        .foregroundColor(esMasCaro ? .red : .green)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+
+                                // Agrega un divisor entre combustibles disponibles, excepto en el último
+                                if index < availableFuels.count - 1 {
+                                    Divider()
+                                        .background(Color.gray.opacity(0.3))
+                                        .padding(.vertical, 4)
                                 }
                             }
                         }

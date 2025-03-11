@@ -69,15 +69,16 @@ struct MapaGasolinerasView: View {
                             viewModel.centerMapOnCheapestGasolineras()
                         }) {
                             HStack(spacing: 5) {
-                                Image(systemName: "star.fill")
+                                Image(systemName: "dollarsign.circle.fill")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 15, height: 15)
-                                    .foregroundColor(.yellow)
-                                    .background(Color.white)
+                                    .frame(width: 18, height: 18) // Tamaño ligeramente más grande
+                                    .foregroundColor(.green) // Color distintivo para el badge
+                                    .background(Color.white) // Fondo blanco para destacar
                                     .clipShape(Circle())
                                     .overlay(
-                                        Circle().stroke(Color.primary.opacity(0.4), lineWidth: 0.5)
+                                        Circle()
+                                            .stroke(Color.primary.opacity(0.4), lineWidth: 0.5) // Borde fino de color .primary
                                     )
                                 
                                 Text("Precio más bajo en \(viewModel.radius, specifier: "%.2f") km ")

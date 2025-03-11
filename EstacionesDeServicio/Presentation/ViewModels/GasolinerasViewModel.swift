@@ -34,7 +34,7 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     @Published var retryCount: Int = 0
     private let maxRetries: Int = 3
     
-    @Published var sortOption: SortOption = .distance {
+    @Published var sortOption: SortOption = .price {
         didSet {
             updateFilteredGasolineras()
         }
@@ -242,10 +242,6 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
         }
         
         switch sortOption {
-        case .distance:
-            filtered.sort {
-                ($0.distancia ?? .infinity) < ($1.distancia ?? .infinity)
-            }
         case .price:
             filtered.sort { (a, b) -> Bool in
                 let priceA = a.price(for: selectedFuelType) ?? Double.infinity
@@ -258,6 +254,10 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
                     let distanceB = b.distancia ?? Double.infinity
                     return distanceA < distanceB
                 }
+            }
+        case .distance:
+            filtered.sort {
+                ($0.distancia ?? .infinity) < ($1.distancia ?? .infinity)
             }
         }
         

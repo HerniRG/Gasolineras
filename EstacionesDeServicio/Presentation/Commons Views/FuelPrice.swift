@@ -18,12 +18,13 @@ struct FuelPrice: View {
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
+                        .frame(minWidth: 100, alignment: .leading) // Fuerza mismo ancho para todos
                     Spacer()
                     Text("\(price, specifier: "%.3f") €")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                .frame(width: 140)
+                .frame(maxWidth: .infinity, alignment: .leading) // Asegura que el HStack completo esté alineado
                 .padding(8)
                 .background(backgroundColor)
                 .cornerRadius(8)

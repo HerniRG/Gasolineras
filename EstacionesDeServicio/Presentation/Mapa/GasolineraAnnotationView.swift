@@ -16,11 +16,11 @@ struct GasolineraAnnotationView: View {
             
             // Añadir un badge si es la más económica
             if isCheapest {
-                Image(systemName: "star.fill")
+                Image(systemName: "dollarsign.circle.fill")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 15, height: 15)
-                    .foregroundColor(.yellow) // Color distintivo para el badge
+                    .frame(width: 18, height: 18) // Tamaño ligeramente más grande
+                    .foregroundColor(.green) // Color distintivo para el badge
                     .background(Color.white) // Fondo blanco para destacar
                     .clipShape(Circle())
                     .overlay(

@@ -1,8 +1,8 @@
 import Foundation
 
 enum SortOption: String, CaseIterable, Identifiable {
-    case distance = "Distancia"
     case price = "Precio"
+    case distance = "Distancia"
     
     var id: String { self.rawValue }
 }
