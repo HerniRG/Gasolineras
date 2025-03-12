@@ -2,17 +2,32 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UILaunchScreen</key>
-	<dict>
-		<key>UIColorName</key>
-		<string>backS</string>
-		<key>UIImageName</key>
-		<string>logoS</string>
-	</dict>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>comgooglemaps</string>
-		<string>waze</string>
-	</array>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>comgooglemaps</string>
+        <string>waze</string>
+    </array>
+    <key>UILaunchScreen</key>
+    <dict>
+        <key>UIColorName</key>
+        <string>backS</string>
+        <key>UIImageName</key>
+        <string>logoS</string>
+    </dict>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>sedeaplicaciones.minetur.gob.es</key>
+            <dict>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSExceptionRequiresForwardSecrecy</key>
+                <false/>
+            </dict>
+        </dict>
+    </dict>
 </dict>
 </plist>
