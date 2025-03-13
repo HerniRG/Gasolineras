@@ -6,7 +6,7 @@ struct GasolineraDetailView: View {
     @State private var detailRegion = MKCoordinateRegion()
     @EnvironmentObject var viewModel: GasolinerasViewModel
     
-    // Variables de estado para el Confirmation Dialog
+    @State private var isShowingHistory = false // Estado para el Sheet de historial
     @State private var isShowingNavigationOptions = false
     @State private var availableNavigationApps: [NavigationApp] = []
     
@@ -205,6 +205,18 @@ struct GasolineraDetailView: View {
             .padding()
         }
         .navigationTitle("Detalles")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    isShowingHistory = true
+                }) {
+                    Image(systemName: "chart.bar.fill")
+                }
+            }
+        }
+        .sheet(isPresented: $isShowingHistory) {
+            GasolineraHistoryView(gasolinera: gasolinera)
+        }
         .onAppear {
             // Centrar en la gasolinera
             detailRegion = MKCoordinateRegion(

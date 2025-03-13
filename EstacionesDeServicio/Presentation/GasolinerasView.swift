@@ -84,7 +84,6 @@ struct GasolinerasView: View {
                     // --- Búsqueda y Filtros ---
                     if selectedTab == .list {
                         VStack(spacing: 8) {
-                            // Botón de búsqueda que ocupa todo el ancho
                             Button(action: {
                                 isNavigatingToSearch = true
                             }) {
@@ -93,22 +92,22 @@ struct GasolinerasView: View {
                                         .foregroundColor(.gray)
                                     Text("Buscar gasolineras o ubicación")
                                         .foregroundColor(.gray)
-                                        .frame(maxWidth: .infinity, alignment: .leading) // Alinear a la izquierda
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 .padding(10)
                                 .background(Color(.systemGray6))
                                 .cornerRadius(8)
                             }
-                            .frame(maxWidth: .infinity) // Ocupar todo el ancho disponible
-                            .padding(.horizontal, 16) // Márgenes laterales
-                            
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 16)
+
                             FilterControlsView()
                                 .padding(.horizontal)
                         }
-                        .padding(.top, 4) // Reducir el espacio encima (ajusta según sea necesario)
+                        .padding(.top, 4)
                     }
-                    
-                    // --- Listado o Mapa ---
+
+                    // --- Contenido Principal: Lista o Mapa ---
                     if selectedTab == .list {
                         if viewModel.filteredGasolineras.isEmpty {
                             VStack {
@@ -130,19 +129,47 @@ struct GasolinerasView: View {
                     } else {
                         mapView
                     }
-                    
-                    // --- TabBar ---
-                    if !keyboard.isKeyboardVisible {
-                        CustomTabBar(selectedTab: $selectedTab, tabs: [.list, .map])
-                            .padding(.bottom, 20)
-                            .transition(.move(edge: .bottom))
-                            .animation(.easeInOut(duration: 0.3), value: selectedTab)
-                    }
                 }
                 .frame(maxHeight: .infinity)
                 .edgesIgnoringSafeArea(.bottom)
             }
+
+            // --- Botón Flotante en el Centro Inferior ---
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.2)) {
+                            selectedTab = (selectedTab == .list) ? .map : .list
+                        }
+                    }) {
+                        Label(
+                            title: {
+                                Text(selectedTab == .list ? "Mapa" : "Lista")
+                                    .transition(.opacity) // Suaviza el cambio de texto
+                            },
+                            icon: {
+                                Image(systemName: selectedTab == .list ? "map.fill" : "list.bullet")
+                                    .rotationEffect(.degrees(selectedTab == .list ? 0 : 180)) // Rotación suave del icono
+                                    .scaleEffect(selectedTab == .list ? 1.0 : 1.2) // Efecto de escala al cambiar
+                                    .animation(.easeInOut(duration: 0.3), value: selectedTab)
+                            }
+                        )
+                        .font(.caption)
+                        .padding()
+                        .foregroundColor(Color.white)
+                        .background(selectedTab == .list ? Color.blue : Color.green) // Cambio de color animado
+                        .clipShape(Capsule())
+                        .shadow(radius: 5)
+                        .scaleEffect(selectedTab == .list ? 1.0 : 1.1) // Hace un pequeño zoom al cambiar
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedTab)
+                    }
+                    Spacer()
+                }
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: selectedTab)
     }
     
     @ViewBuilder
