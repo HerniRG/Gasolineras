@@ -46,8 +46,12 @@ struct SearchView: View {
                         .accessibilityIdentifier("NoResultsText")
                     Spacer()
                 } else {
-                    ListView(gasolineras: viewModel.globalSearchResults)
-                        .listStyle(PlainListStyle())
+                    List(viewModel.globalSearchResults) { gasolinera in
+                        NavigationLink(destination: GasolineraDetailView(gasolinera: gasolinera)) {
+                            GasolineraRow(gasolinera: gasolinera)
+                        }
+                    }
+                    .listStyle(PlainListStyle())
                 }
             }
             .navigationTitle("Buscar Gasolineras")

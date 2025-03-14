@@ -7,7 +7,10 @@ struct GasolinerasView: View {
     @State private var isShowingPreferences: Bool = false
     @State private var isShowingGPSActivation: Bool = false
     @StateObject private var keyboard = KeyboardObserver()
-    @State private var isNavigatingToSearch: Bool = false  // Nuevo estado para la navegación
+    @State private var isNavigatingToSearch: Bool = false  // Estado para la navegación
+    
+    // Estado para detectar si el último elemento está visible
+    @State private var isLastItemVisible: Bool = false
     
     enum Tab { case list, map }
     
@@ -16,8 +19,7 @@ struct GasolinerasView: View {
             content
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    
-                    // 1) Título Personalizado en el Centro
+                    // 1) Título personalizado en el centro
                     ToolbarItem(placement: .principal) {
                         HStack(spacing: 8) {
                             Image("gasolineraIcon")
@@ -30,7 +32,7 @@ struct GasolinerasView: View {
                         }
                     }
                     
-                    // 2) Botón de Preferencias en la Esquina Derecha
+                    // 2) Botón de preferencias en la esquina derecha
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
                             isShowingPreferences = true
@@ -65,7 +67,7 @@ struct GasolinerasView: View {
         // Navegación a SearchView
         .fullScreenCover(isPresented: $isNavigatingToSearch) {
             SearchView()
-                .environmentObject(viewModel) // Asegúrate de pasar el EnvironmentObject si es necesario
+                .environmentObject(viewModel)
         }
     }
     
@@ -80,7 +82,6 @@ struct GasolinerasView: View {
                     .transition(.move(edge: .bottom))
             } else {
                 VStack(spacing: 0) {
-                    
                     // --- Búsqueda y Filtros ---
                     if selectedTab == .list {
                         VStack(spacing: 8) {
@@ -100,13 +101,13 @@ struct GasolinerasView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 16)
-
+                            
                             FilterControlsView()
                                 .padding(.horizontal)
                         }
                         .padding(.top, 4)
                     }
-
+                    
                     // --- Contenido Principal: Lista o Mapa ---
                     if selectedTab == .list {
                         if viewModel.filteredGasolineras.isEmpty {
@@ -119,12 +120,35 @@ struct GasolinerasView: View {
                             }
                             .transition(.opacity)
                         } else {
-                            ListView(gasolineras: viewModel.filteredGasolineras)
-                                .listStyle(PlainListStyle())
-                                .transition(.asymmetric(
-                                    insertion: .move(edge: .leading),
-                                    removal: .move(edge: .leading)
-                                ))
+                            List {
+                                // Usamos un ForEach enumerado para identificar el último elemento
+                                ForEach(Array(viewModel.filteredGasolineras.enumerated()), id: \.element.id) { index, gasolinera in
+                                    NavigationLink(destination: GasolineraDetailView(gasolinera: gasolinera)) {
+                                        GasolineraRow(gasolinera: gasolinera)
+                                    }
+                                    .onAppear {
+                                        if index == viewModel.filteredGasolineras.count - 1 {
+                                            withAnimation {
+                                                isLastItemVisible = true
+                                            }
+                                        }
+                                    }
+                                    .onDisappear {
+                                        if index == viewModel.filteredGasolineras.count - 1 {
+                                            withAnimation {
+                                                isLastItemVisible = false
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .listStyle(PlainListStyle())
+                            // Al cambiar el número de resultados, reseteamos la variable para que se recalcule la visibilidad del botón
+                            .onChange(of: viewModel.filteredGasolineras.count) { newCount in
+                                withAnimation {
+                                    isLastItemVisible = false
+                                }
+                            }
                         }
                     } else {
                         mapView
@@ -133,40 +157,46 @@ struct GasolinerasView: View {
                 .frame(maxHeight: .infinity)
                 .edgesIgnoringSafeArea(.bottom)
             }
-
+            
             // --- Botón Flotante en el Centro Inferior ---
-            VStack {
-                Spacer()
-                HStack {
+            // Solo se muestra si NO hay loading ni error
+            if !viewModel.isLoading && viewModel.errorMessage == nil {
+                VStack {
                     Spacer()
-                    Button(action: {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.2)) {
-                            selectedTab = (selectedTab == .list) ? .map : .list
-                        }
-                    }) {
-                        Label(
-                            title: {
-                                Text(selectedTab == .list ? "Mapa" : "Lista")
-                                    .transition(.opacity) // Suaviza el cambio de texto
-                            },
-                            icon: {
-                                Image(systemName: selectedTab == .list ? "map.fill" : "list.bullet")
-                                    .rotationEffect(.degrees(selectedTab == .list ? 0 : 180)) // Rotación suave del icono
-                                    .scaleEffect(selectedTab == .list ? 1.0 : 1.2) // Efecto de escala al cambiar
-                                    .animation(.easeInOut(duration: 0.3), value: selectedTab)
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.2)) {
+                                selectedTab = (selectedTab == .list) ? .map : .list
                             }
-                        )
-                        .font(.caption)
-                        .padding()
-                        .foregroundColor(Color.white)
-                        .background(selectedTab == .list ? Color.blue : Color.green) // Cambio de color animado
-                        .clipShape(Capsule())
-                        .shadow(radius: 5)
-                        .scaleEffect(selectedTab == .list ? 1.0 : 1.1) // Hace un pequeño zoom al cambiar
-                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedTab)
+                        }) {
+                            Label(
+                                title: {
+                                    Text(selectedTab == .list ? "Mapa" : "Lista")
+                                        .transition(.opacity)
+                                },
+                                icon: {
+                                    Image(systemName: selectedTab == .list ? "map.fill" : "list.bullet")
+                                        .rotationEffect(.degrees(selectedTab == .list ? 0 : 180))
+                                        .scaleEffect(selectedTab == .list ? 1.0 : 1.2)
+                                        .animation(.easeInOut(duration: 0.3), value: selectedTab)
+                                }
+                            )
+                            .font(.caption)
+                            .padding()
+                            .foregroundColor(.white)
+                            .background(selectedTab == .list ? Color.blue : Color.green)
+                            .clipShape(Capsule())
+                            .shadow(radius: 5)
+                            .scaleEffect(selectedTab == .list ? 1.0 : 1.1)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedTab)
+                        }
+                        Spacer()
                     }
-                    Spacer()
                 }
+                .opacity(isLastItemVisible ? 0 : 1)
+                .offset(y: isLastItemVisible ? 50 : 0)
+                .animation(.easeInOut(duration: 0.3), value: isLastItemVisible)
             }
         }
         .animation(.easeInOut(duration: 0.3), value: selectedTab)
@@ -174,13 +204,9 @@ struct GasolinerasView: View {
     
     @ViewBuilder
     private var mapView: some View {
-        // Ahora solo contenemos MapaGasolinerasView
-        MapaGasolinerasView(
-            gasolineras: viewModel.gasolineras
-        )
-        .transition(
-            .asymmetric(insertion: .move(edge: .trailing),
-                        removal: .move(edge: .trailing))
-        )
+        // Contenido del mapa con transición
+        MapaGasolinerasView(gasolineras: viewModel.gasolineras)
+            .transition(.asymmetric(insertion: .move(edge: .trailing),
+                                      removal: .move(edge: .trailing)))
     }
 }

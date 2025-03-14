@@ -2,33 +2,60 @@ import SwiftUI
 
 struct SkeletonLoadingView: View {
     var body: some View {
-        VStack(spacing: 8) {
-            // Skeleton para el campo de búsqueda
-            SkeletonSearchBar()
-                .padding(.horizontal)
-                .padding(.top, 8)
-
-            // Skeleton para FilterControlsView
-            SkeletonFilterControlsView()
-                .padding(.horizontal)
-
-            // Skeleton para el contenido principal (lista de gasolineras)
-            List {
-                ForEach(0..<10, id: \.self) { _ in
-                    SkeletonRow()
-                        .listRowSeparator(.visible)
-                        .listRowSeparatorTint(Color.gray.opacity(0.5))
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+        ZStack {
+            VStack(spacing: 8) {
+                // Skeleton para el campo de búsqueda
+                SkeletonSearchBar()
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                
+                // Skeleton para FilterControlsView
+                SkeletonFilterControlsView()
+                    .padding(.horizontal)
+                
+                // Skeleton para el contenido principal (lista de gasolineras)
+                List {
+                    ForEach(0..<10, id: \.self) { _ in
+                        SkeletonRow()
+                            .listRowSeparator(.visible)
+                            .listRowSeparatorTint(Color.gray.opacity(0.5))
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    }
+                }
+                .listStyle(.plain)
+            }
+            .edgesIgnoringSafeArea(.bottom)
+            
+            // Reemplazo del SkeletonTabBar por el botón flotante
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button(action: {}) {
+                        Label(
+                            title: {
+                                Text("Mapa")
+                                    .font(.caption)
+                            },
+                            icon: {
+                                Image(systemName: "map.fill")
+                                    .font(.caption)
+                            }
+                        )
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(Color.blue)
+                        .clipShape(Capsule())
+                        .shadow(radius: 5)
+                    }
+                    .disabled(true) // Deshabilitado para que no sea interactivo en modo loading
+                    Spacer()
                 }
             }
-            .listStyle(.plain)
-
-            // Skeleton para la TabBar
-            SkeletonTabBar()
         }
-        .edgesIgnoringSafeArea(.bottom) // Evita que la TabBar quede fuera de la pantalla
     }
 }
+
 
 struct SkeletonSearchBar: View {
     var body: some View {
