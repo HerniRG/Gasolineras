@@ -1,11 +1,3 @@
-//
-//  GasolineraEntity.swift
-//  EstacionesDeServicio
-//
-//  Created by Hernán Rodríguez on 9/1/25.
-//
-
-
 import Foundation
 import MapKit
 import SwiftData
