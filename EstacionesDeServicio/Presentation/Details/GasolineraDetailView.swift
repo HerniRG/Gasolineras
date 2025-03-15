@@ -152,7 +152,7 @@ struct GasolineraDetailView: View {
                                     let esMasCaro = diferenciaPrecio >= 0
                                     let descripcion = esMasCaro ? "más caro" : "más barato"
 
-                                    Text("\(abs(diferenciaPrecio), specifier: "%.3f") €/L \(descripcion) respecto a la media en \(Int(viewModel.radius)) km")
+                                    Text("\(abs(diferenciaPrecio), specifier: "%.3f") €/L \(descripcion) respecto a la media en \(viewModel.radius, specifier: "%.2f") km")
                                         .font(.caption)
                                         .foregroundColor(esMasCaro ? .red : .green)
                                         .frame(maxWidth: .infinity, alignment: .leading)
