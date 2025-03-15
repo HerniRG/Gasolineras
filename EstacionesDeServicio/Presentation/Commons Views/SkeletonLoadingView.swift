@@ -25,33 +25,6 @@ struct SkeletonLoadingView: View {
                 .listStyle(.plain)
             }
             .edgesIgnoringSafeArea(.bottom)
-            
-            // Reemplazo del SkeletonTabBar por el botón flotante
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Button(action: {}) {
-                        Label(
-                            title: {
-                                Text("Mapa")
-                                    .font(.caption)
-                            },
-                            icon: {
-                                Image(systemName: "map.fill")
-                                    .font(.caption)
-                            }
-                        )
-                        .padding()
-                        .foregroundColor(.white)
-                        .background(Color.blue)
-                        .clipShape(Capsule())
-                        .shadow(radius: 5)
-                    }
-                    .disabled(true) // Deshabilitado para que no sea interactivo en modo loading
-                    Spacer()
-                }
-            }
         }
     }
 }

@@ -11,6 +11,7 @@ struct GasolinerasView: View {
     
     // Estado para detectar si el último elemento está visible
     @State private var isLastItemVisible: Bool = false
+    @State private var showFloatingButton: Bool = false
     
     enum Tab { case list, map }
     
@@ -194,9 +195,17 @@ struct GasolinerasView: View {
                         Spacer()
                     }
                 }
-                .opacity(isLastItemVisible ? 0 : 1)
-                .offset(y: isLastItemVisible ? 50 : 0)
-                .animation(.easeInOut(duration: 0.3), value: isLastItemVisible)
+            .opacity((showFloatingButton && !isLastItemVisible) ? 1 : 0)
+            .offset(y: (showFloatingButton && !isLastItemVisible) ? 0 : 50)
+            .onAppear {
+                if !showFloatingButton {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            showFloatingButton = true
+                        }
+                    }
+                }
+            }
             }
         }
         .animation(.easeInOut(duration: 0.3), value: selectedTab)
@@ -206,7 +215,7 @@ struct GasolinerasView: View {
     private var mapView: some View {
         // Contenido del mapa con transición
         MapaGasolinerasView(gasolineras: viewModel.gasolineras)
-            .transition(.asymmetric(insertion: .move(edge: .trailing),
-                                      removal: .move(edge: .trailing)))
+            .transition(.asymmetric(insertion: .move(edge: .bottom),
+                                      removal: .move(edge: .bottom)))
     }
 }

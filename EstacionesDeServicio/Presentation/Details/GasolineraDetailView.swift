@@ -122,17 +122,17 @@ struct GasolineraDetailView: View {
                 }
                 
                 // Dirección
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Dirección")
-                        .font(.headline)
-                    Text("\(gasolinera.direccion), \(gasolinera.localidad), \(gasolinera.provincia)")
+                GroupBox(label: Label("Dirección", systemImage: "house.fill")) {
+                    HStack {
+                        Text("\(gasolinera.direccion), \(gasolinera.localidad), \(gasolinera.provincia)")
+                            .padding(.top, 5)
+                        Spacer()
+                    }
+                    
                 }
                 
                 // Precios
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Precios")
-                        .font(.headline)
-                    
+                GroupBox(label: Label("Precios", systemImage: "tag.fill")) {
                     // Lista de precios con FuelPrice y cálculo de llenado
                     let availableFuels = FuelType.allCases.filter { gasolinera.price(for: $0) != nil }
                     
@@ -168,23 +168,27 @@ struct GasolineraDetailView: View {
                             }
                         }
                     }
+                    .padding(.top, 5)
                 }
                 
                 // Horario
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Horario")
-                        .font(.headline)
-                    
-                    // Separamos el horario por ';' y mostramos cada parte en su propia línea
-                    let horarioSegments = gasolinera.horario
-                        .split(separator: ";")
-                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                    
-                    ForEach(horarioSegments, id: \.self) { segmento in
-                        Text(segmento)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                GroupBox(label: Label("Horario", systemImage: "clock.fill")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Separamos el horario por ';' y mostramos cada parte en su propia línea
+                        let horarioSegments = gasolinera.horario
+                            .split(separator: ";")
+                            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                        
+                        ForEach(horarioSegments, id: \.self) { segmento in
+                            HStack {
+                                Text(segmento)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                            }
+                        }
                     }
+                    .padding(.top, 5)
                 }
                 
                 Spacer()
