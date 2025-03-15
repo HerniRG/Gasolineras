@@ -66,49 +66,52 @@ struct MapaGasolinerasView: View {
                 
                 if showPins {
                     Button(action: {
-                        viewModel.centerMapOnCheapestGasolineras()
-                    }) {
-                        HStack(spacing: 5) {
-                            Image(systemName: "dollarsign.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 18, height: 18) // Tamaño ligeramente más grande
-                                .foregroundColor(.green) // Color distintivo para el badge
-                                .background(Color.white) // Fondo blanco para destacar
-                                .clipShape(Circle())
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.primary.opacity(0.4), lineWidth: 0.5) // Borde fino de color .primary
-                                )
-                            
-                            Text("Precio más bajo en \(viewModel.radius, specifier: "%.2f") km ")
-                                .font(.subheadline)
-                                .foregroundColor(.primary)
-                            
-                            Image(systemName: "eye")
-                                .foregroundColor(.blue)
-                                .font(.system(size: 12, weight: .bold))
-                                .scaleEffect(viewModel.showNotification ? 1.4 : 1.0)
-                                .animation(.easeOut(duration: 0.6), value: viewModel.showNotification)
+                        DispatchQueue.main.async {
+                            viewModel.centerMapOnCheapestGasolineras()
+                        }                    }) {
+                            HStack(spacing: 5) {
+                                Image(systemName: "dollarsign.circle.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 18, height: 18) // Tamaño ligeramente más grande
+                                    .foregroundColor(.green) // Color distintivo para el badge
+                                    .background(Color.white) // Fondo blanco para destacar
+                                    .clipShape(Circle())
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.primary.opacity(0.4), lineWidth: 0.5) // Borde fino de color .primary
+                                    )
+                                
+                                Text("Precio más bajo en \(viewModel.radius, specifier: "%.2f") km ")
+                                    .font(.subheadline)
+                                    .foregroundColor(.primary)
+                                
+                                Image(systemName: "eye")
+                                    .foregroundColor(.blue)
+                                    .font(.system(size: 12, weight: .bold))
+                                    .scaleEffect(viewModel.showNotification ? 1.4 : 1.0)
+                                    .animation(.easeOut(duration: 0.6), value: viewModel.showNotification)
+                            }
                         }
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .bubbleStyle()
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.blue, lineWidth: 0.5)
-                    )
-                    .padding(.bottom, 20)
+                        .buttonStyle(PlainButtonStyle())
+                        .bubbleStyle()
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.blue, lineWidth: 0.5)
+                        )
+                        .padding(.bottom, 20)
                 }
                 
                 HStack {
-                                        
+                    
                     Spacer()
                     
                     // Botón "centrar en mi ubicación"
                     FloatingButton(icon: "location.fill") {
-                        viewModel.requestLocationUpdate()
-                        viewModel.centerOnUserLocation()
+                        DispatchQueue.main.async {
+                            viewModel.requestLocationUpdate()
+                            viewModel.centerOnUserLocation()
+                        }
                     }
                     .accessibilityLabel("Centrar en mi ubicación actual")
                 }
@@ -138,8 +141,10 @@ struct MapaGasolinerasView: View {
         .onAppear {
             Task {
                 try await Task.sleep(nanoseconds: 500_000_000) // 0.5 segundos
-                withAnimation(.easeOut(duration: 0.6)) {
-                    animateEye = true
+                await MainActor.run {
+                    withAnimation(.easeOut(duration: 0.6)) {
+                        animateEye = true
+                    }
                 }
             }
         }

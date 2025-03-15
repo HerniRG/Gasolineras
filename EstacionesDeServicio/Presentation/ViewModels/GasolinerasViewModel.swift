@@ -4,7 +4,7 @@ import Combine
 import MapKit
 
 @MainActor
-final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
+final class GasolinerasViewModel: NSObject, ObservableObject, @preconcurrency CLLocationManagerDelegate {
     // MARK: - Variables de Filtro/Estado
     @AppStorage("selectedFuelTypeRaw") private var selectedFuelTypeRaw: String = FuelType.gasolina95.rawValue
     @Published var selectedFuelType: FuelType = .gasolina95 {
@@ -130,20 +130,21 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
-
+        
         self.retryCount = 0
-
-        if userLocation == nil {
-            self.userLocation = loc.coordinate
-            self.region = MKCoordinateRegion(
-                center: loc.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
-            )
-            self.loadGasolineras()
-        } else {
-            self.userLocation = loc.coordinate
-            self.updateDistances()
-            self.updateFilteredGasolineras()
+        DispatchQueue.main.async {
+            if self.userLocation == nil {
+                self.userLocation = loc.coordinate
+                self.region = MKCoordinateRegion(
+                    center: loc.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                )
+                self.loadGasolineras()
+            } else {
+                self.userLocation = loc.coordinate
+                self.updateDistances()
+                self.updateFilteredGasolineras()
+            }
         }
     }
     
@@ -360,35 +361,33 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
 
     
     // MARK: - Funciones de Centrado
-    
     func centerOnUserLocation() {
         guard let currentLocation = userLocation else {
             debugPrint("Error: No se pudo obtener la ubicación actual del usuario.")
             return
         }
-
+        
         let currentDelta = region.span.latitudeDelta
-
-        Task {
+        
+        DispatchQueue.main.async {
             if currentDelta > 5.0 {
-                // Salto rápido sin animación
-                region = MKCoordinateRegion(
+                // Actualización inmediata sin animación
+                self.region = MKCoordinateRegion(
                     center: currentLocation,
                     span: MKCoordinateSpan(latitudeDelta: 1.0, longitudeDelta: 1.0)
                 )
-
-                // Animación posterior
-                try await Task.sleep(nanoseconds: 100_000_000) // 0.1 segundos
-                withAnimation {
-                    region = MKCoordinateRegion(
-                        center: currentLocation,
-                        span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
-                    )
+                // Programamos la animación unos décimas de segundo después
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation {
+                        self.region = MKCoordinateRegion(
+                            center: currentLocation,
+                            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                        )
+                    }
                 }
             } else {
-                // Zoom no tan alejado: animamos directamente
                 withAnimation {
-                    region = MKCoordinateRegion(
+                    self.region = MKCoordinateRegion(
                         center: currentLocation,
                         span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
                     )
@@ -399,7 +398,7 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
     
     func centerMapOnCheapestGasolineras() {
         guard let (cheapestGas, displayIndex) = cycleCheapestGasolinera() else { return }
-
+        
         let newRegion = MKCoordinateRegion(
             center: cheapestGas.coordinate,
             span: MKCoordinateSpan(
@@ -407,22 +406,28 @@ final class GasolinerasViewModel: NSObject, ObservableObject, CLLocationManagerD
                 longitudeDelta: region.span.longitudeDelta
             )
         )
-
+        
         Task {
-            withAnimation {
-                region = newRegion
-                if cheapestGasolineras.count > 1 {
-                    notificationText = "Gasolinera con el precio más bajo centrada (\(displayIndex) de \(cheapestGasolineras.count))"
-                } else {
-                    notificationText = "Gasolinera con el precio más bajo centrada"
+            // Posponer las actualizaciones hasta la siguiente iteración
+            await Task.yield()
+            await MainActor.run {
+                withAnimation {
+                    self.region = newRegion
+                    if self.cheapestGasolineras.count > 1 {
+                        self.notificationText = "Gasolinera con el precio más bajo centrada (\(displayIndex) de \(self.cheapestGasolineras.count))"
+                    } else {
+                        self.notificationText = "Gasolinera con el precio más bajo centrada"
+                    }
+                    self.showNotification = true
                 }
-                showNotification = true
             }
-
+            
             // Oculta la notificación a los 3 segundos
             try await Task.sleep(nanoseconds: 3 * 1_000_000_000)
-            withAnimation {
-                showNotification = false
+            await MainActor.run {
+                withAnimation {
+                    self.showNotification = false
+                }
             }
         }
     }
