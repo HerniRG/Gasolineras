@@ -177,7 +177,7 @@ final class GasolinerasViewModel: NSObject, ObservableObject, @preconcurrency CL
         Task {
             do {
                 if let lastUpdated = try SwiftDataManager.shared.getLastUpdatedDate(),
-                   Calendar.current.isDateInToday(lastUpdated) {
+                   Date().timeIntervalSince(lastUpdated) < 6 * 60 * 60 {
                     let cachedGasolineras = try SwiftDataManager.shared.fetchGasolineras()
                     self.gasolineras = cachedGasolineras
                     self.updateDistances()

@@ -58,10 +58,13 @@ struct GasolineraRow: View {
             
             // Badge si es la gasolinera más barata
             if viewModel.cheapestGasolineras.contains(where: { $0.id == gasolinera.id }) {
-                Text("💰 Mejor precio en la zona")
-                    .font(.caption)
-                    .bold()
+                Text("💰 Mejor precio")
+                    .font(.caption2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.green.opacity(0.2))
                     .foregroundColor(.green)
+                    .cornerRadius(6)
             }
         }
         .padding(.vertical, 8)

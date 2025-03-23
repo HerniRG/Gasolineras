@@ -80,7 +80,7 @@ struct GasolinerasView: View {
                     .transition(.opacity)
             } else if let error = viewModel.errorMessage {
                 ErrorView(error: error, retryAction: viewModel.retryLoading)
-                    .transition(.move(edge: .bottom))
+                    .transition(.opacity)
             } else {
                 VStack(spacing: 0) {
                     // --- Búsqueda y Filtros ---
@@ -113,10 +113,20 @@ struct GasolinerasView: View {
                     if selectedTab == .list {
                         if viewModel.filteredGasolineras.isEmpty {
                             VStack {
-                                Text("No se encontraron resultados.")
+                                Spacer()
+                                Image(systemName: "magnifyingglass.circle")
+                                    .resizable()
+                                    .frame(width: 64, height: 64)
+                                    .foregroundColor(.gray.opacity(0.4))
+
+                                Text("No encontramos gasolineras con esos filtros")
                                     .font(.headline)
-                                    .foregroundColor(.gray)
-                                    .padding(.top, 24)
+                                    .padding(.top, 8)
+
+                                Text("Prueba a ampliar la distancia o cambiar el tipo de combustible.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
                                 Spacer()
                             }
                             .transition(.opacity)
@@ -157,6 +167,7 @@ struct GasolinerasView: View {
                 }
                 .frame(maxHeight: .infinity)
                 .edgesIgnoringSafeArea(.bottom)
+                .transition(.opacity)
             }
             
             // --- Botón Flotante en el Centro Inferior ---
@@ -167,7 +178,8 @@ struct GasolinerasView: View {
                     HStack {
                         Spacer()
                         Button(action: {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.2)) {
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            withAnimation(.easeInOut(duration: 0.4)) {
                                 selectedTab = (selectedTab == .list) ? .map : .list
                             }
                         }) {
@@ -208,14 +220,13 @@ struct GasolinerasView: View {
             }
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: selectedTab)
+        .animation(.easeInOut(duration: 0.4), value: viewModel.isLoading)
     }
     
     @ViewBuilder
     private var mapView: some View {
         // Contenido del mapa con transición
         MapaGasolinerasView(gasolineras: viewModel.gasolineras)
-            .transition(.asymmetric(insertion: .move(edge: .bottom),
-                                      removal: .move(edge: .bottom)))
+            .transition(.move(edge: .bottom))
     }
 }
