@@ -4,7 +4,10 @@ import SwiftData
 
 @Model
 class GasolineraEntity {
-    @Attribute(.unique) var id: String
+    @Attribute(.unique) var cacheKey: String
+    var id: String
+    var municipalityID: Int
+    var productID: Int
     var rotulo: String
     var direccion: String
     var localidad: String
@@ -31,8 +34,11 @@ class GasolineraEntity {
     }
     
     // Inicializador para crear una entidad desde una instancia de Gasolinera
-    init(from gasolinera: Gasolinera) {
+    init(from gasolinera: Gasolinera, municipalityID: Int, productID: Int) {
+        self.cacheKey = "\(gasolinera.id)-\(municipalityID)-\(productID)"
         self.id = gasolinera.id
+        self.municipalityID = municipalityID
+        self.productID = productID
         self.rotulo = gasolinera.rotulo
         self.direccion = gasolinera.direccion
         self.localidad = gasolinera.localidad

@@ -7,7 +7,7 @@ final class ObtenerGasolinerasUseCase {
         self.apiService = apiService
     }
 
-    func ejecutar() async throws -> [Gasolinera] {
-        return try await apiService.fetchGasolineras()
+    func ejecutar(municipioID: Int, productoID: Int) async throws -> [Gasolinera] {
+        return try await apiService.fetchGasolineras(municipioID: municipioID, productID: productoID)
     }
 }

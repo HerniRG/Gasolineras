@@ -53,6 +53,11 @@ final class GasolinerasViewModel: NSObject, ObservableObject, @preconcurrency CL
     @Published var locationDenied: Bool = false
     
     private let locationManager = CLLocationManager()
+    private let geocoder = CLGeocoder()
+    private let obtenerGasolinerasUseCase = ObtenerGasolinerasUseCase()
+
+    private var currentMunicipalityID: Int?
+    private var currentProductID: Int?
     
     @Published var minPrice: Double? = nil
     @Published var cheapestGasolineras: [Gasolinera] = []
@@ -175,20 +180,40 @@ final class GasolinerasViewModel: NSObject, ObservableObject, @preconcurrency CL
     // MARK: - Carga de datos
     func loadGasolineras() {
         Task {
+            guard let location = userLocation else { return }
             do {
-                if let lastUpdated = try SwiftDataManager.shared.getLastUpdatedDate(),
+                let placemarks = try await geocoder.reverseGeocodeLocation(CLLocation(latitude: location.latitude, longitude: location.longitude))
+                guard let placemark = placemarks.first else { return }
+
+                let provinciaNombre = placemark.administrativeArea ?? ""
+                let municipioNombre = placemark.locality ?? ""
+
+                let provincias = try await APIService.shared.fetchProvincias()
+                guard let provincia = provincias.first(where: { $0.nombre.caseInsensitiveCompare(provinciaNombre) == .orderedSame }) else { return }
+
+                let municipios = try await APIService.shared.fetchMunicipios(idProvincia: provincia.id)
+                guard let municipio = municipios.first(where: { $0.nombre.caseInsensitiveCompare(municipioNombre) == .orderedSame }) else { return }
+
+                let productos = try await APIService.shared.fetchProductos()
+                guard let producto = productos.first(where: { $0.nombre.caseInsensitiveCompare(selectedFuelType.displayName) == .orderedSame }) else { return }
+
+                currentMunicipalityID = municipio.id
+                currentProductID = producto.id
+
+                if let lastUpdated = try SwiftDataManager.shared.getLastUpdatedDate(municipalityID: municipio.id, productID: producto.id),
                    Date().timeIntervalSince(lastUpdated) < 6 * 60 * 60 {
-                    let cachedGasolineras = try SwiftDataManager.shared.fetchGasolineras()
-                    self.gasolineras = cachedGasolineras
+                    let cached = try SwiftDataManager.shared.fetchGasolineras(municipalityID: municipio.id, productID: producto.id)
+                    self.gasolineras = cached
                     self.updateDistances()
                     self.updateFilteredGasolineras()
                     self.isLoading = false
                 } else {
-                    try await fetchFromAPI()
+                    try await fetchFromAPI(municipioID: municipio.id, productoID: producto.id)
                 }
             } catch {
-                debugPrint("Error al acceder a la base de datos: \(error.localizedDescription)")
-                try? await fetchFromAPI()
+                debugPrint("Error al cargar datos: \(error.localizedDescription)")
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
             }
         }
     }
@@ -199,18 +224,18 @@ final class GasolinerasViewModel: NSObject, ObservableObject, @preconcurrency CL
         loadGasolineras()
     }
     
-    private func fetchFromAPI() async throws {
+    private func fetchFromAPI(municipioID: Int, productoID: Int) async throws {
         isLoading = true
         errorMessage = nil
-        
+
         do {
-            let result = try await APIService.shared.fetchGasolineras()
+            let result = try await obtenerGasolinerasUseCase.ejecutar(municipioID: municipioID, productoID: productoID)
             self.gasolineras = result
             self.updateDistances()
             self.updateFilteredGasolineras()
             isLoading = false
-            
-            try await SwiftDataManager.shared.saveGasolineras(result)
+
+            try await SwiftDataManager.shared.saveGasolineras(result, municipalityID: municipioID, productID: productoID)
         } catch {
             self.errorMessage = error.localizedDescription
             self.isLoading = false

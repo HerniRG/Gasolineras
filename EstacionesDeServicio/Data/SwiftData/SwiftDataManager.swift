@@ -20,22 +20,28 @@ class SwiftDataManager {
     }
     
     // Guardar gasolineras en la base de datos
-    func saveGasolineras(_ gasolineras: [Gasolinera]) async throws {
+    func saveGasolineras(_ gasolineras: [Gasolinera], municipalityID: Int, productID: Int) async throws {
         let context = container.mainContext
         // Eliminar gasolineras existentes para evitar duplicados
-        let existingGasolineras = try context.fetch(FetchDescriptor<GasolineraEntity>())
+        let predicate = #Predicate<GasolineraEntity> { entity in
+            entity.municipalityID == municipalityID && entity.productID == productID
+        }
+        let existingGasolineras = try context.fetch(FetchDescriptor(predicate: predicate))
         for gasolinera in existingGasolineras {
             context.delete(gasolinera)
         }
-        
+
         // Insertar nuevas gasolineras
         for gasolinera in gasolineras {
-            let entity = GasolineraEntity(from: gasolinera)
+            let entity = GasolineraEntity(from: gasolinera, municipalityID: municipalityID, productID: productID)
             context.insert(entity)
         }
-        
+
         // Actualizar la fecha de última actualización
-        let metadata = try context.fetch(FetchDescriptor<MetadataEntity>()).first ?? MetadataEntity()
+        let metaPredicate = #Predicate<MetadataEntity> { meta in
+            meta.municipalityID == municipalityID && meta.productID == productID
+        }
+        let metadata = try context.fetch(FetchDescriptor(predicate: metaPredicate)).first ?? MetadataEntity(municipalityID: municipalityID, productID: productID)
         metadata.lastUpdated = Date()
         context.insert(metadata)
         
@@ -43,9 +49,12 @@ class SwiftDataManager {
     }
     
     // Recuperar gasolineras desde la base de datos
-    func fetchGasolineras() throws -> [Gasolinera] {
+    func fetchGasolineras(municipalityID: Int, productID: Int) throws -> [Gasolinera] {
         let context = container.mainContext
-        let fetchDescriptor = FetchDescriptor<GasolineraEntity>()
+        let predicate = #Predicate<GasolineraEntity> { entity in
+            entity.municipalityID == municipalityID && entity.productID == productID
+        }
+        let fetchDescriptor = FetchDescriptor(predicate: predicate)
         let entities = try context.fetch(fetchDescriptor)
         
         // Convertir GasolineraEntity a Gasolinera
@@ -78,9 +87,12 @@ class SwiftDataManager {
     }
     
     // Obtener la fecha de última actualización
-    func getLastUpdatedDate() throws -> Date? {
+    func getLastUpdatedDate(municipalityID: Int, productID: Int) throws -> Date? {
         let context = container.mainContext
-        let fetchDescriptor = FetchDescriptor<MetadataEntity>()
+        let predicate = #Predicate<MetadataEntity> { meta in
+            meta.municipalityID == municipalityID && meta.productID == productID
+        }
+        let fetchDescriptor = FetchDescriptor(predicate: predicate)
         let metadata = try context.fetch(fetchDescriptor).first
         return metadata?.lastUpdated
     }

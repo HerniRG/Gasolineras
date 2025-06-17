@@ -171,7 +171,7 @@ extension Gasolinera {
 }
 
 extension Gasolinera {
-    func toEntity() -> GasolineraEntity {
-        return GasolineraEntity(from: self)
+    func toEntity(municipalityID: Int, productID: Int) -> GasolineraEntity {
+        return GasolineraEntity(from: self, municipalityID: municipalityID, productID: productID)
     }
 }
